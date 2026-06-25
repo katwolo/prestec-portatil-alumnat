@@ -11,6 +11,9 @@ var HEADERS = {
   prestecs:  ['id','aId','pId','dataE','dataD','curs','obs','obsD','estat']
 };
 
+var ID_PETICIONS = "1Pm06Uu3Y350NTZqNuWs4g6e6r4Zqaq5zQAOyrbD8lzU";
+var ID_REGISTRE  = "1bAYP40kOYT7C006R3bUuWuIxtGg79XeOr55DvJ5t_eo";
+
 // ══════════════════════════════════════════════════════════════
 //  INTERFÍCIE D'USUARI
 // ══════════════════════════════════════════════════════════════
@@ -438,4 +441,96 @@ function netejarRegistre() {
   var lastRow = sh.getLastRow();
   if (lastRow > 1) sh.deleteRows(2, lastRow - 1);
   ui.alert('✅ Registre netejat correctament.');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PETICIONS — lectura del Sheets de peticions dels tutors
+// ══════════════════════════════════════════════════════════════
+
+function loadPeticions() {
+  try {
+    var ss = SpreadsheetApp.openById(ID_PETICIONS);
+    var sh = ss.getSheetByName('Petició inicial');
+    if (!sh) return JSON.stringify({ ok: false, msg: 'No s\'ha trobat la pestanya "Petició inicial".' });
+    var lastRow = sh.getLastRow();
+    if (lastRow < 2) return JSON.stringify({ ok: true, data: [] });
+    var data = sh.getRange(2, 1, lastRow - 1, 9).getValues();
+    var tz = Session.getScriptTimeZone();
+    var result = data
+      .filter(function(r) { return r[1] || r[2]; })
+      .map(function(r) {
+        return {
+          timestamp:   r[0] ? Utilities.formatDate(new Date(r[0]), tz, 'dd/MM/yyyy HH:mm') : '',
+          nom:         String(r[1] || ''),
+          cognoms:     String(r[2] || ''),
+          curs:        String(r[3] || ''),
+          classe:      String(r[4] || ''),
+          emailAlum:   String(r[5] || ''),
+          coach:       String(r[6] || ''),
+          emailCoach:  String(r[7] || ''),
+          preferencia: String(r[8] || '')
+        };
+      });
+    return JSON.stringify({ ok: true, data: result });
+  } catch(e) {
+    return JSON.stringify({ ok: false, msg: e.message });
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  SYNC REGISTRE → GESTIÓ (des de la web app, botó manual)
+// ══════════════════════════════════════════════════════════════
+
+function genId_() {
+  var chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  var id = '';
+  for (var i = 0; i < 12; i++) id += chars.charAt(Math.floor(Math.random() * chars.length));
+  return id;
+}
+
+function genUniqueId_(sh) {
+  var lastRow = sh.getLastRow();
+  var existing = lastRow > 1 ? sh.getRange(2, 1, lastRow - 1, 1).getValues().map(function(r) { return r[0]; }) : [];
+  var id;
+  do { id = genId_(); } while (existing.indexOf(id) !== -1);
+  return id;
+}
+
+function syncRegistreManual() {
+  try {
+    var ssReg     = SpreadsheetApp.openById(ID_REGISTRE);
+    var shReg     = ssReg.getSheetByName('Full 1');
+    if (!shReg) return JSON.stringify({ ok: false, msg: 'No s\'ha trobat la pestanya "Full 1" al Registre.' });
+
+    var shAlumnes = getSheet('alumnes');
+    var lastRow   = shReg.getLastRow();
+    if (lastRow < 2) return JSON.stringify({ ok: true, copiats: 0 });
+
+    var data = shReg.getRange(2, 1, lastRow - 1, 9).getValues();
+    // A=0:Timestamp | B=1:Nom | C=2:Cognoms | D=3:Curs | E=4:Classe | F=5:Email | G=6:Coach | H=7:EmailCoach | I=8:✅
+    var copiats = 0;
+
+    for (var i = 0; i < data.length; i++) {
+      var row = data[i];
+      if (!row[1] && !row[2]) continue;
+      if (row[8] === '✅') continue;
+
+      shAlumnes.appendRow([
+        genUniqueId_(shAlumnes),
+        row[1] || '',
+        row[2] || '',
+        row[3] || '',
+        row[4] || '',
+        row[5] || '',
+        row[6] || '',
+        row[7] || ''
+      ]);
+      shReg.getRange(i + 2, 9).setValue('✅');
+      copiats++;
+    }
+
+    return JSON.stringify({ ok: true, copiats: copiats });
+  } catch(e) {
+    return JSON.stringify({ ok: false, msg: e.message });
+  }
 }

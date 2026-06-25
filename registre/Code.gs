@@ -39,6 +39,7 @@ function guardarRegistro(datos) {
     datos.coach,       // G: Nom Coach
     datos.emailCoach   // H: Email Coach
   ]);
+  try { sincronitzarRegistre(); } catch(e) { Logger.log('Sync error: ' + e.message); }
   return "Sol·licitud registrada correctament. Les condicions de l'Institut de l'Esport de Barcelona han estat acceptades.";
 }
 
