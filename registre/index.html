@@ -109,6 +109,30 @@
   <script>
     const idDocOriginal = "<?= idDocument ?>";
 
+    // Pre-omplir camps si venen dades del tutor via URL
+    (function() {
+      var pre = {
+        nombre:      "<?= preNom ?>",
+        apellidos:   "<?= preCognoms ?>",
+        curso:       "<?= preCurs ?>",
+        clase:       "<?= preClasse ?>",
+        emailAlumno: "<?= preEmail ?>",
+        coach:       "<?= preCoach ?>",
+        emailCoach:  "<?= preEmailCoach ?>"
+      };
+      var hasData = Object.keys(pre).some(function(k) { return pre[k] !== ''; });
+      if (!hasData) return;
+      Object.keys(pre).forEach(function(name) {
+        if (!pre[name]) return;
+        var el = document.querySelector('[name="' + name + '"]');
+        if (!el) return;
+        el.value = pre[name];
+        el.readOnly = true;
+        el.style.background = '#f3f4f6';
+        el.style.cursor = 'default';
+      });
+    })();
+
     function openModal() {
       const form = document.getElementById('prestamoForm');
       if (!form.checkValidity()) {

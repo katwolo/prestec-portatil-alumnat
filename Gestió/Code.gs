@@ -13,6 +13,7 @@ var HEADERS = {
 
 var ID_PETICIONS = "1Pm06Uu3Y350NTZqNuWs4g6e6r4Zqaq5zQAOyrbD8lzU";
 var ID_REGISTRE  = "1bAYP40kOYT7C006R3bUuWuIxtGg79XeOr55DvJ5t_eo";
+var URL_REGISTRE_WEBAPP = ""; // 🔴 Enganxa aquí la URL de desplegament del formulari de Registre
 
 // ══════════════════════════════════════════════════════════════
 //  INTERFÍCIE D'USUARI
@@ -69,10 +70,13 @@ function sheetToObjects(name) {
   var data = sh.getDataRange().getValues();
   if (data.length <= 1) return [];
   var headers = data[0];
+  var tz = Session.getScriptTimeZone();
   return data.slice(1).map(function(row) {
     var obj = {};
     headers.forEach(function(h, i) {
-      obj[h] = (row[i] === undefined || row[i] === null) ? '' : String(row[i]);
+      var v = row[i];
+      if (v instanceof Date) obj[h] = Utilities.formatDate(v, tz, 'yyyy-MM-dd');
+      else obj[h] = (v === undefined || v === null) ? '' : String(v);
     });
     return obj;
   });
@@ -169,7 +173,8 @@ function renderPlaceholders_(txt, d) {
     .replace(/\{\{correoAlumno\}\}/gi,   d.correoAlumno   || '')
     .replace(/\{\{nombreTutor\}\}/gi,    d.nombreTutor    || '')
     .replace(/\{\{correoTutor\}\}/gi,    d.correoTutor    || '')
-    .replace(/\{\{Dadesportatils\}\}/gi, d.dadesPortatils || '');
+    .replace(/\{\{Dadesportatils\}\}/gi, d.dadesPortatils || '')
+    .replace(/\{\{urlRegistre\}\}/gi,    d.urlRegistre    || '');
 }
 
 function buildDadesPortatilsByAluId_(alumneId) {
@@ -555,12 +560,23 @@ function enviarAcceptarCondicionsLot(alumnesJson) {
     var enviats = 0, errorsLlista = [];
 
     alumnes.forEach(function(a) {
+      var urlRegistre = URL_REGISTRE_WEBAPP
+        ? URL_REGISTRE_WEBAPP +
+          '?nombre='      + encodeURIComponent(a.nom        || '') +
+          '&apellidos='   + encodeURIComponent(a.cognoms    || '') +
+          '&curso='       + encodeURIComponent(a.curs       || '') +
+          '&clase='       + encodeURIComponent(a.classe     || '') +
+          '&emailAlumno=' + encodeURIComponent(a.emailAlum  || '') +
+          '&coach='       + encodeURIComponent(a.coach      || '') +
+          '&emailCoach='  + encodeURIComponent(a.emailCoach || '')
+        : '';
       var dic = {
-        nombreAlumno:   a.nom       || '',
-        correoAlumno:   a.emailAlum || '',
-        nombreTutor:    a.coach     || '',
+        nombreAlumno:   a.nom        || '',
+        correoAlumno:   a.emailAlum  || '',
+        nombreTutor:    a.coach      || '',
         correoTutor:    a.emailCoach || '',
-        dadesPortatils: ''
+        dadesPortatils: '',
+        urlRegistre:    urlRegistre
       };
       var cos      = renderPlaceholders_(plantilla.cos, dic);
       var assumpFi = renderPlaceholders_(assumpte, dic);

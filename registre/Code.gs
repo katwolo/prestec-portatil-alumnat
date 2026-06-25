@@ -9,9 +9,17 @@ var ID_GESTOR = "15b0FVkvr7eVeeyjokrk2ely9sQmwLHyBZaQwqKEOtVM";             // �
 //  Web App
 // ──────────────────────────────────────────────────────────────
 
-function doGet() {
+function doGet(e) {
+  var p = (e && e.parameter) ? e.parameter : {};
   var template = HtmlService.createTemplateFromFile('Index');
-  template.idDocument = ID_DOCUMENT_CONDICIONS;
+  template.idDocument   = ID_DOCUMENT_CONDICIONS;
+  template.preNom       = p.nombre      || '';
+  template.preCognoms   = p.apellidos   || '';
+  template.preCurs      = p.curso       || '';
+  template.preClasse    = p.clase       || '';
+  template.preEmail     = p.emailAlumno || '';
+  template.preCoach     = p.coach       || '';
+  template.preEmailCoach = p.emailCoach || '';
   return template.evaluate()
     .setTitle('Registre de Préstec de Portàtils')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
