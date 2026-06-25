@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sol·licitud de Préstec de Portàtils</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue-50: #E6F1FB;
+      --blue-100: #B5D4F4;
+      --blue-600: #185FA5;
+      --blue-800: #0C447C;
+      --blue-900: #042C53;
+      --teal-50: #E1F5EE;
+      --teal-600: #0F6E56;
+      --teal-800: #085041;
+      --green-50: #EAF3DE;
+      --green-600: #3B6D11;
+      --green-800: #27500A;
+      --amber-50: #FAEEDA;
+      --amber-600: #854F0B;
+      --amber-800: #633806;
+      --red-50: #FCEBEB;
+      --red-600: #A32D2D;
+      --gray-50: #F1EFE8;
+      --gray-100: #D3D1C7;
+      --gray-200: #B4B2A9;
+      --gray-600: #5F5E5A;
+      --gray-800: #444441;
+      --gray-900: #2C2C2A;
+      --radius: 10px;
+      --radius-lg: 14px;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2rem 1rem 4rem;
+      color: var(--gray-900);
+    }
+
+    .page-wrap {
+      width: 100%;
+      max-width: 640px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--blue-50);
+      color: var(--blue-800);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      border-radius: 20px;
+      margin-bottom: 1rem;
+    }
+
+    .header h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.9rem;
+      color: var(--blue-900);
+      line-height: 1.2;
+      margin-bottom: 0.4rem;
+    }
+
+    .header p {
+      font-size: 0.875rem;
+      color: var(--gray-600);
+    }
+
+    .card {
+      background: #fff;
+      border-radius: var(--radius-lg);
+      border: 1px solid #e2e8f0;
+      padding: 1.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .section-title {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--blue-600);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e2e8f0;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .field-grid.single { grid-template-columns: 1fr; }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--gray-800);
+      letter-spacing: 0.03em;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    select {
+      width: 100%;
+      padding: 0.6rem 0.75rem;
+      border: 1.5px solid #d1d5db;
+      border-radius: var(--radius);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.875rem;
+      color: var(--gray-900);
+      background: #fff;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      appearance: none;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--blue-600);
+      box-shadow: 0 0 0 3px rgba(24, 95, 165, 0.12);
+    }
+
+    input::placeholder { color: #9ca3af; }
+
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235F5E5A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.75rem center;
+      padding-right: 2.5rem;
+    }
+
+    .alumnes-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .alumnes-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .alumne-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr auto auto;
+      gap: 0.6rem;
+      align-items: end;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: var(--radius);
+      padding: 0.75rem 0.9rem;
+      position: relative;
+      animation: slideIn 0.2s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .alumne-num {
+      position: absolute;
+      top: -8px;
+      left: 10px;
+      background: var(--blue-600);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 600;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .alumne-row .field { gap: 4px; }
+    .alumne-row label { font-size: 0.7rem; }
+    .alumne-row input, .alumne-row select { font-size: 0.82rem; padding: 0.5rem 0.65rem; }
+
+    .pref-alta { border-left: 3px solid #e24b4a; }
+    .pref-mitja { border-left: 3px solid #ef9f27; }
+    .pref-baixa { border-left: 3px solid #639922; }
+
+    .btn-remove {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1.5px solid #e2e8f0;
+      background: #fff;
+      color: #9ca3af;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      flex-shrink: 0;
+      align-self: flex-end;
+      margin-bottom: 2px;
+    }
+
+    .btn-remove:hover { background: var(--red-50); border-color: #f09595; color: var(--red-600); }
+
+    .btn-add {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 0.65rem;
+      border: 1.5px dashed #b0b8c4;
+      border-radius: var(--radius);
+      background: transparent;
+      color: var(--gray-600);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-top: 0.75rem;
+    }
+
+    .btn-add:hover { border-color: var(--blue-600); color: var(--blue-600); background: var(--blue-50); }
+
+    .btn-submit {
+      width: 100%;
+      padding: 0.9rem;
+      background: var(--blue-800);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-lg);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.02em;
+    }
+
+    .btn-submit:hover:not(:disabled) { background: var(--blue-900); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(4, 44, 83, 0.2); }
+    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .empty-state {
+      text-align: center;
+      padding: 1.5rem;
+      color: #9ca3af;
+      font-size: 0.85rem;
+      border: 1.5px dashed #d1d5db;
+      border-radius: var(--radius);
+    }
+
+    .legend {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.75rem;
+      color: var(--gray-600);
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+    }
+
+    .msg-success {
+      display: none;
+      margin-top: 1.25rem;
+      padding: 1.25rem 1.5rem;
+      background: var(--teal-50);
+      border: 1px solid #9fe1cb;
+      border-radius: var(--radius-lg);
+      color: var(--teal-800);
+      font-weight: 500;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+
+    .modal-bg {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .modal-bg.open { display: flex; }
+
+    .modal-box {
+      background: #fff;
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 560px;
+      max-height: 88vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+
+    .modal-head {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-head h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.15rem;
+      color: var(--blue-900);
+    }
+
+    .modal-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.25rem 1.5rem;
+    }
+
+    .modal-foot {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+    }
+
+    .btn-cancel {
+      padding: 0.6rem 1.2rem;
+      background: #f1f5f9;
+      color: var(--gray-800);
+      border: none;
+      border-radius: var(--radius);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-cancel:hover { background: #e2e8f0; }
+
+    .btn-confirm {
+      padding: 0.6rem 1.4rem;
+      background: var(--teal-600);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-confirm:hover { background: var(--teal-800); }
+
+    .resum-box {
+      font-size: 0.8rem;
+      color: var(--gray-600);
+      margin-bottom: 1rem;
+    }
+
+    .resum-box strong { color: var(--gray-900); }
+
+    .resum-alumne {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 5px 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .badge-pref {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-alta { background: #FCEBEB; color: var(--red-600); }
+    .badge-mitja { background: #FAEEDA; color: var(--amber-600); }
+    .badge-baixa { background: var(--green-50); color: var(--green-600); }
+
+    @media (max-width: 500px) {
+      .field-grid { grid-template-columns: 1fr; }
+      .alumne-row { grid-template-columns: 1fr 1fr; grid-template-rows: auto auto; }
+      .alumne-row .field:nth-child(3) { grid-column: 1 / -1; }
+      .btn-remove { align-self: center; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-wrap">
+
+  <div class="header">
+    <div class="header-badge">Institut de l'Esport de Barcelona</div>
+    <h1>Petició de Préstec<br>de Portàtils</h1>
+    <p>Formulari per a tutors · Curs 2025–2026</p>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Dades del coach</div>
+    <div class="field-grid" style="margin-bottom: 1rem;">
+      <div class="field">
+        <label for="nomTutor">Nom i cognoms</label>
+        <input type="text" id="nomTutor" placeholder="Ex: Joan Clotet Puig" required>
+      </div>
+      <div class="field">
+        <label for="emailTutor">Correu corporatiu</label>
+        <input type="email" id="emailTutor" placeholder="Ex: joan.clotet@ieb.cat" required>
+      </div>
+    </div>
+    <div class="field-grid">
+      <div class="field">
+        <label for="curs">Curs</label>
+        <input type="text" id="curs" placeholder="Ex: 26-27" required>
+      </div>
+      <div class="field">
+        <label for="classe">Classe</label>
+        <input type="text" id="classe" placeholder="Ex: 2nEAS_B" required>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="alumnes-header">
+      <div class="section-title" style="margin-bottom:0; flex:1;">Alumnes sol·licitants</div>
+    </div>
+
+    <div class="legend" style="margin-bottom: 1rem;">
+      <div class="legend-item"><div class="legend-dot" style="background:#e24b4a;"></div> Alta prioritat</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ef9f27;"></div> Prioritat mitjana</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#639922;"></div> Baixa prioritat</div>
+    </div>
+
+    <div class="alumnes-list" id="alumnesList">
+      <div class="empty-state" id="emptyState">Afegiu el primer alumne amb el botó de sota.</div>
+    </div>
+
+    <button type="button" class="btn-add" onclick="afegirAlumne()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Afegir alumne
+    </button>
+  </div>
+
+  <button type="button" class="btn-submit" id="btnEnviar" onclick="obrirModal()">
+    Revisar i enviar sol·licitud
+  </button>
+
+  <div class="msg-success" id="msgExit"></div>
+
+</div>
+
+<div class="modal-bg" id="modal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h2>Revisió de la sol·licitud</h2>
+    </div>
+    <div class="modal-body">
+
+      <div class="resum-box" id="resumTutor"></div>
+
+      <div style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--blue-600); margin-bottom: 0.6rem;">Coach</div>
+      <div id="resumAlumnes" style="margin-bottom: 1.25rem;"></div>
+
+
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="btn-cancel" onclick="tancarModal()">Cancel·lar</button>
+      <button type="button" class="btn-confirm" onclick="enviarFinal()">Acceptar i enviar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let comptador = 0;
+
+  function afegirAlumne() {
+    comptador++;
+    const llista = document.getElementById('alumnesList');
+    const buit = document.getElementById('emptyState');
+    if (buit) buit.remove();
+
+    const fila = document.createElement('div');
+    fila.className = 'alumne-row';
+    fila.dataset.id = comptador;
+    fila.innerHTML = `
+      <div class="alumne-num">${comptador}</div>
+      <div class="field">
+        <label>Nom</label>
+        <input type="text" placeholder="Ex: Marc" data-field="nom" required>
+      </div>
+      <div class="field">
+        <label>Cognoms</label>
+        <input type="text" placeholder="Ex: Garcia Pérez" data-field="cognoms" required>
+      </div>
+      <div class="field">
+        <label>Correu alumne</label>
+        <input type="email" placeholder="Ex: alum@ieb.cat" data-field="emailAlum" required>
+      </div>
+      <div class="field">
+        <label>Preferència</label>
+        <select data-field="preferencia" onchange="actualitzarColor(this)">
+          <option value="Alta">Alta</option>
+          <option value="Mitja">Mitja</option>
+          <option value="Baixa">Baixa</option>
+        </select>
+      </div>
+      <button type="button" class="btn-remove" onclick="eliminarAlumne(this)" aria-label="Eliminar alumne" title="Eliminar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    `;
+    llista.appendChild(fila);
+    actualitzarColor(fila.querySelector('select'));
+    fila.querySelector('input').focus();
+  }
+
+  function actualitzarColor(sel) {
+    const fila = sel.closest('.alumne-row');
+    fila.classList.remove('pref-alta', 'pref-mitja', 'pref-baixa');
+    const mapa = { 'Alta': 'pref-alta', 'Mitja': 'pref-mitja', 'Baixa': 'pref-baixa' };
+    fila.classList.add(mapa[sel.value] || '');
+  }
+
+  function eliminarAlumne(btn) {
+    const fila = btn.closest('.alumne-row');
+    fila.remove();
+    renumerarFiles();
+    if (document.querySelectorAll('.alumne-row').length === 0) {
+      const llista = document.getElementById('alumnesList');
+      const buit = document.createElement('div');
+      buit.className = 'empty-state';
+      buit.id = 'emptyState';
+      buit.textContent = 'Afegiu el primer alumne amb el botó de sota.';
+      llista.appendChild(buit);
+    }
+  }
+
+  function renumerarFiles() {
+    document.querySelectorAll('.alumne-row').forEach((fila, i) => {
+      const num = fila.querySelector('.alumne-num');
+      if (num) num.textContent = i + 1;
+    });
+  }
+
+  function validarFormulari() {
+    const nom = document.getElementById('nomTutor').value.trim();
+    const email = document.getElementById('emailTutor').value.trim();
+    const curs = document.getElementById('curs').value.trim();
+    const classe = document.getElementById('classe').value.trim();
+
+    if (!nom || !email || !curs || !classe) {
+      alert('Si us plau, completa les dades del coach.');
+      return false;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      alert('El correu del coach no és vàlid.');
+      return false;
+    }
+
+    const files = document.querySelectorAll('.alumne-row');
+    if (files.length === 0) {
+      alert('Cal afegir almenys un alumne.');
+      return false;
+    }
+
+    for (let fila of files) {
+      const nomA = fila.querySelector('[data-field="nom"]').value.trim();
+      const cognomsA = fila.querySelector('[data-field="cognoms"]').value.trim();
+      const emailA = fila.querySelector('[data-field="emailAlum"]').value.trim();
+      if (!nomA || !cognomsA || !emailA) {
+        alert('Tots els alumnes han de tenir nom, cognoms i correu.');
+        return false;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailA)) {
+        alert('El correu de l\'alumne "' + nomA + '" no és vàlid.');
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function obrirModal() {
+    if (!validarFormulari()) return;
+
+    const nom = document.getElementById('nomTutor').value.trim();
+    const email = document.getElementById('emailTutor').value.trim();
+    const curs = document.getElementById('curs').value.trim();
+    const classe = document.getElementById('classe').value.trim();
+
+    document.getElementById('resumTutor').innerHTML = `
+      <strong>${nom}</strong> &nbsp;·&nbsp; ${email} &nbsp;·&nbsp; Curs: <strong>${curs}</strong> &nbsp;·&nbsp; Classe: <strong>${classe}</strong>
+    `;
+
+    const files = document.querySelectorAll('.alumne-row');
+    const contResum = document.getElementById('resumAlumnes');
+    contResum.innerHTML = '';
+    files.forEach((fila, i) => {
+      const nomA = fila.querySelector('[data-field="nom"]').value.trim();
+      const cognomsA = fila.querySelector('[data-field="cognoms"]').value.trim();
+      const emailA = fila.querySelector('[data-field="emailAlum"]').value.trim();
+      const pref = fila.querySelector('[data-field="preferencia"]').value;
+      const badgeClass = { Alta: 'badge-alta', Mitja: 'badge-mitja', Baixa: 'badge-baixa' }[pref];
+      const div = document.createElement('div');
+      div.className = 'resum-alumne';
+      div.innerHTML = `<span>${nomA} ${cognomsA} <span style="color:#9ca3af;font-size:0.75rem;">${emailA}</span></span><span class="badge-pref ${badgeClass}">${pref}</span>`;
+      contResum.appendChild(div);
+    });
+
+    document.getElementById('modal').classList.add('open');
+  }
+
+  function tancarModal() {
+    document.getElementById('modal').classList.remove('open');
+  }
+
+  function enviarFinal() {
+    tancarModal();
+
+    const nomTutor = document.getElementById('nomTutor').value.trim();
+    const emailTutor = document.getElementById('emailTutor').value.trim();
+    const curs = document.getElementById('curs').value.trim();
+    const classe = document.getElementById('classe').value.trim();
+    const timestamp = new Date().toISOString();
+
+    const alumnes = [];
+    document.querySelectorAll('.alumne-row').forEach(fila => {
+      alumnes.push({
+        nom: fila.querySelector('[data-field="nom"]').value.trim(),
+        cognoms: fila.querySelector('[data-field="cognoms"]').value.trim(),
+        emailAlum: fila.querySelector('[data-field="emailAlum"]').value.trim(),
+        preferencia: fila.querySelector('[data-field="preferencia"]').value
+      });
+    });
+
+    const btn = document.getElementById('btnEnviar');
+    btn.disabled = true;
+    btn.textContent = 'Enviant sol·licitud...';
+
+    google.script.run
+      .withSuccessHandler(function(resp) {
+        btn.disabled = false;
+        btn.textContent = 'Revisar i enviar sol·licitud';
+        document.getElementById('nomTutor').value = '';
+        document.getElementById('emailTutor').value = '';
+        document.getElementById('curs').value = '';
+        document.getElementById('classe').value = '';
+        document.getElementById('alumnesList').innerHTML = '<div class="empty-state" id="emptyState">Afegiu el primer alumne amb el botó de sota.</div>';
+        comptador = 0;
+        const msg = document.getElementById('msgExit');
+        msg.textContent = resp;
+        msg.style.display = 'block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      })
+      .withFailureHandler(function(err) {
+        btn.disabled = false;
+        btn.textContent = 'Revisar i enviar sol·licitud';
+        alert('Error en enviar la sol·licitud: ' + err.message);
+      })
+      .guardarRegistre({ nomTutor, emailTutor, curs, classe, alumnes, timestamp });
+  }
+</script>
+</body>
+</html>
