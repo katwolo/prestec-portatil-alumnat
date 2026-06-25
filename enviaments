@@ -1,0 +1,267 @@
+// ============================================================
+// ENVIAMENT DE CORREUS — PRÉSTEC PORTÀTILS 25-26
+//
+// Estructura de la fulla "Petició inicial" (columnes A:J):
+//   A: Registre
+//   B: Nom
+//   C: Cognoms
+//   D: Curs
+//   E: Classe
+//   F: Email alumne/a
+//   G: Coach
+//   H: Mail coach
+//   I: Preferència
+//   J: Envia? (casella TRUE/FALSE)
+//
+// Estructura de la fulla "plantilles":
+//   B1: Assumpte base
+//   A2:C∞ → A: Nom plantilla | B: Cos HTML | C: Destinatari
+//     Destinatari: "Alumnat" | "Coach" | "Ambdós"
+//
+// Variables de substitució disponibles al cos i a l'assumpte:
+//   {{nombreAlumno}}  {{correoAlumno}}  {{nombreTutor}}  {{correoTutor}}
+//
+// PLANTILLA ACTIVA: canvia el valor de PLANTILLA_ACTIVA per
+// seleccionar quina plantilla s'usa en cada campanya.
+// Opcions actuals: "IniciCoach" | "AcceptarCondicions" |
+//   "EntregaPortàtils" | "RecordatoriContrasenya" | "AvisRecollirPortatil"
+// ============================================================
+
+const PLANTILLA_ACTIVA = "AcceptarCondicions"; // ← canvia aquí segons la campanya
+
+
+/**
+ * Funció principal. Recorre totes les files de "Petició inicial",
+ * comprova quines tenen la casella J marcada i envia el correu
+ * amb la plantilla definida a PLANTILLA_ACTIVA.
+ */
+function enviament() {
+  const ss             = SpreadsheetApp.getActiveSpreadsheet();
+  const hoja           = ss.getSheetByName("Petició inicial");
+  const hojaRegistro   = prepararHojaRegistro();
+  const hojaPlantilles = ss.getSheetByName("plantilles");
+
+  const assumpteBase = hojaPlantilles.getRange("B1").getValue() || "Préstec portàtil";
+  const plantilles   = carregarPlantilles(hojaPlantilles);
+
+  const plantillaObj = plantilles[PLANTILLA_ACTIVA];
+  if (!plantillaObj) {
+    Logger.log(`❌ Plantilla "${PLANTILLA_ACTIVA}" no trobada. Revisa PLANTILLA_ACTIVA.`);
+    return;
+  }
+
+  const ultimaFila = hoja.getLastRow();
+  if (ultimaFila < 2) {
+    Logger.log("ℹ️ No hi ha dades a la fulla.");
+    return;
+  }
+
+  const dades = hoja.getRange(2, 1, ultimaFila - 1, 10).getValues(); // A:J
+
+  for (let i = 0; i < dades.length; i++) {
+    const fila          = dades[i];
+    const nom           = fila[1];   // B
+    const cognoms       = fila[2];   // C
+    const correuAlumne  = fila[5];   // F
+    const nomCoach      = fila[6];   // G
+    const correuCoach   = fila[7];   // H
+    const casellaMarcada = fila[9];  // J
+
+    // Saltem files buides o no marcades
+    if (!casellaMarcada) continue;
+    if (!nom && !correuAlumne) continue;
+
+    const nomAlumne = nom; // només columna B
+
+    const cosHtml = substituirVariables(
+      plantillaObj.cos,
+      nomAlumne, correuAlumne, nomCoach, correuCoach
+    );
+    const assumpteFinal = substituirVariables(
+      assumpteBase,
+      nomAlumne, correuAlumne, nomCoach, correuCoach
+    );
+
+    const destinataris = resoldrDestinataris(
+      plantillaObj.destinatari, correuAlumne, correuCoach
+    );
+
+    if (destinataris.length === 0) {
+      Logger.log(`⚠️ Fila ${i + 2} (${nomAlumne}): cap destinatari vàlid.`);
+      continue;
+    }
+
+    const opcions = {
+      subject:  assumpteFinal,
+      htmlBody: cosHtml,
+    };
+
+    // Si la plantilla és "Ambdós", enviem a alumne i coach per separat
+    // Si és "Coach", enviem només al coach; si és "Alumnat", només a l'alumne
+    for (const destinatari of destinataris) {
+      try {
+        GmailApp.sendEmail(destinatari, assumpteFinal, '', opcions);
+        registrarEnvio(hojaRegistro, destinatari, assumpteFinal, PLANTILLA_ACTIVA);
+        Logger.log(`✅ Fila ${i + 2} (${nomAlumne}): enviat a ${destinatari}`);
+      } catch (error) {
+        Logger.log(`❌ Fila ${i + 2} (${nomAlumne}): error enviant a ${destinatari} → ${error}`);
+      }
+    }
+
+    // Desmarquem la casella J un cop enviat
+    hoja.getRange(i + 2, 10).setValue(false);
+  }
+}
+
+
+// ─────────────────────────────────────────────
+// FUNCIONS AUXILIARS
+// ─────────────────────────────────────────────
+
+/**
+ * Substitueix totes les variables de plantilla al text.
+ * Aquí "tutor" = coach (adaptat al context de portàtils).
+ */
+function substituirVariables(text, nomAlumne, correuAlumne, nomCoach, correuCoach) {
+  return text
+    .replace(/{{\s*nombreAlumno\s*}}/gi,  nomAlumne   || '')
+    .replace(/{{\s*correoAlumno\s*}}/gi,  correuAlumne || '')
+    .replace(/{{\s*nombreTutor\s*}}/gi,   nomCoach    || '')
+    .replace(/{{\s*correoTutor\s*}}/gi,   correuCoach  || '');
+}
+
+/**
+ * Retorna la llista de correus destinataris en funció del camp
+ * "Destinatari" de la plantilla.
+ *
+ * @param {string} tipusDestinatari - "alumnat" | "ambdós" | "coach"
+ */
+function resoldrDestinataris(tipusDestinatari, correuAlumne, correuCoach) {
+  const destinataris = [];
+  switch ((tipusDestinatari || '').toLowerCase()) {
+    case 'alumnat':
+      if (correuAlumne) destinataris.push(correuAlumne);
+      break;
+    case 'ambdós':
+      if (correuAlumne) destinataris.push(correuAlumne);
+      if (correuCoach)  destinataris.push(correuCoach);
+      break;
+    case 'coach':
+      if (correuCoach) destinataris.push(correuCoach);
+      break;
+    default:
+      if (correuCoach) destinataris.push(correuCoach);
+      break;
+  }
+  return destinataris;
+}
+
+/**
+ * S'assegura que existeix la fulla "Registre" amb les capçaleres.
+ */
+function prepararHojaRegistro() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let hoja = ss.getSheetByName("Registre");
+  if (!hoja) {
+    hoja = ss.insertSheet("Registre");
+    hoja.appendRow(["Data", "Hora", "Destinatari", "Assumpte", "Plantilla usada"]);
+  }
+  return hoja;
+}
+
+/**
+ * Afegeix una fila al registre d'enviaments.
+ */
+function registrarEnvio(hoja, destinatari, assumpte, plantillaUsada) {
+  const fecha   = new Date();
+  const dataStr = Utilities.formatDate(fecha, Session.getScriptTimeZone(), "dd/MM/yyyy");
+  const horaStr = Utilities.formatDate(fecha, Session.getScriptTimeZone(), "HH:mm");
+  hoja.appendRow([dataStr, horaStr, destinatari, assumpte, plantillaUsada]);
+}
+
+/**
+ * Carrega totes les plantilles de la fulla "plantilles" en un mapa.
+ */
+function carregarPlantilles(hoja) {
+  if (!hoja) return {};
+  const ultimaFila = hoja.getLastRow();
+  if (ultimaFila < 2) return {};
+
+  const data = hoja.getRange(2, 1, ultimaFila - 1, 3).getValues();
+  const plantillaMap = {};
+  data.forEach(([nom, cos, destinatari]) => {
+    if (nom && cos) {
+      plantillaMap[nom.trim()] = {
+        cos:         cos,
+        destinatari: destinatari ? destinatari.trim().toLowerCase() : 'coach'
+      };
+    }
+  });
+  return plantillaMap;
+}
+
+// ============================================================
+// MENÚ (ordinador) + BOTÓ MÒBIL
+// ============================================================
+
+/**
+ * Crea el menú personalitzat quan s'obre el Sheets.
+ * Funciona a l'ordinador. Al mòbil no apareix → usar el botó de la fulla.
+ */
+function onOpen() {
+  SpreadsheetApp.getUi()
+    .createMenu('📧 Enviament')
+    .addItem('Enviar correus marcats', 'confirmarIEnviar')
+    .addSeparator()
+    .addItem('ℹ️ Plantilla activa: ' + PLANTILLA_ACTIVA, 'mostrarPlantillaActiva')
+    .addToUi();
+}
+
+/**
+ * Mostra un diàleg de confirmació abans d'enviar.
+ * Compta quantes files estan marcades i demana confirmació.
+ * Compatible amb ordinador i amb el botó de la fulla (mòbil inclòs).
+ */
+function confirmarIEnviar() {
+  const ss    = SpreadsheetApp.getActiveSpreadsheet();
+  const hoja  = ss.getSheetByName("Petició inicial");
+  const ui    = SpreadsheetApp.getUi();
+
+  const ultimaFila = hoja.getLastRow();
+  if (ultimaFila < 2) {
+    ui.alert('No hi ha dades a la fulla.');
+    return;
+  }
+
+  // Comptem files marcades (columna J = índex 10, base 1)
+  const columnaEnvia = hoja.getRange(2, 10, ultimaFila - 1, 1).getValues();
+  const marcades = columnaEnvia.filter(([v]) => v === true).length;
+
+  if (marcades === 0) {
+    ui.alert('⚠️ Cap fila marcada', 'No hi ha cap casella "Envia?" activada.', ui.ButtonSet.OK);
+    return;
+  }
+
+  const resposta = ui.alert(
+    '📧 Confirmar enviament',
+    `S'enviaran correus a ${marcades} alumne/s amb la plantilla:\n"${PLANTILLA_ACTIVA}"\n\n¿Continues?`,
+    ui.ButtonSet.YES_NO
+  );
+
+  if (resposta === ui.Button.YES) {
+    enviament();
+    ui.alert('✅ Fet!', `S'han processat ${marcades} enviaments.\nConsulta la fulla "Registre" per als detalls.`, ui.ButtonSet.OK);
+  }
+}
+
+/**
+ * Informa de quina plantilla està activa ara mateix.
+ * Útil quan hi ha més d'una persona gestionant el Sheets.
+ */
+function mostrarPlantillaActiva() {
+  SpreadsheetApp.getUi().alert(
+    'Plantilla activa',
+    `La plantilla configurada ara mateix és:\n\n"${PLANTILLA_ACTIVA}"\n\nPer canviar-la, edita la constant PLANTILLA_ACTIVA al codi.`,
+    SpreadsheetApp.getUi().ButtonSet.OK
+  );
+}
