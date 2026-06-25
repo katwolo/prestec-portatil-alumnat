@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+  <style>
+    .modal { transition: opacity 0.25s ease; }
+    body.modal-active { overflow: hidden; }
+    .form-input {
+      width: 100%;
+      padding: 0.6rem 0.8rem;
+      border: 1px solid #d1d5db;
+      border-radius: 0.5rem;
+      transition: all 0.2s;
+    }
+    .form-input:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen flex items-center justify-center p-6">
+
+  <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-xl border border-gray-100">
+    <div class="text-center mb-8">
+      <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight">Sol·licitud de Préstec de Portàtil</h2>
+      <p class="text-sm text-gray-500 mt-1">Institut de l'Esport de Barcelona</p>
+    </div>
+    
+    <form id="prestamoForm" onsubmit="handleFormSubmit(event)" class="space-y-5">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-gray-700 text-xs font-bold uppercase tracking-wider mb-2">Nom</label>
+          <input type="text" name="nombre" required class="form-input" placeholder="Ex: Marc">
+        </div>
+        <div>
+          <label class="block text-gray-700 text-xs font-bold uppercase tracking-wider mb-2">Cognoms</label>
+          <input type="text" name="apellidos" required class="form-input" placeholder="Ex: Garcia Pérez">
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-gray-700 text-xs font-bold uppercase tracking-wider mb-2">Curs</label>
+          <input type="text" name="curso" placeholder="Ex: 25-26" required class="form-input">
+        </div>
+        <div>
+          <label class="block text-gray-700 text-xs font-bold uppercase tracking-wider mb-2">Classe</label>
+          <input type="text" name="clase" placeholder="Ex: 2nCF_B" required class="form-input">
+        </div>
+      </div>
+
+      <div class="pt-2 border-t border-gray-100">
+        <label class="block text-gray-700 text-xs font-bold uppercase tracking-wider mb-2">Correu Corporatiu de l'Alumne</label>
+        <input type="email" name="emailAlumno" required class="form-input" placeholder="Ex: alum@ieb.cat">
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-gray-100">
+        <div>
+          <label class="block text-gray-700 text-xs font-bold uppercase tracking-wider mb-2">Nom del Coach</label>
+          <input type="text" name="coach" required class="form-input" placeholder="Ex: Joan Clotet">
+        </div>
+        <div>
+          <label class="block text-gray-700 text-xs font-bold uppercase tracking-wider mb-2">Correu Corporatiu del Coach</label>
+          <input type="email" name="emailCoach" required class="form-input" placeholder="Ex: coach@ieb.cat">
+        </div>
+      </div>
+
+      <button type="button" onclick="openModal()" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-blue-700 shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 focus:outline-none">
+        Revisar Condicions i Enviar
+      </button>
+    </form>
+    
+    <div id="mensajeExito" class="hidden mt-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-xl text-center font-medium shadow-sm"></div>
+  </div>
+
+  <div id="modal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center hidden z-50">
+    <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-60 backdrop-filter backdrop-blur-sm"></div>
+    
+    <div class="modal-container bg-white w-11/12 md:max-w-2xl mx-auto rounded-2xl shadow-2xl z-50 overflow-y-auto max-h-[85vh] border border-gray-100">
+      <div class="modal-content py-6 text-left px-8">
+        
+        <div class="flex justify-between items-center pb-4 border-b border-gray-100">
+          <p class="text-xl font-extrabold text-gray-900">Termes i Condicions d'Ús</p>
+        </div>
+
+        <div id="contenidoDinamicoDoc" class="my-6 text-sm text-gray-600 overflow-y-auto max-h-64 p-4 bg-gray-50 rounded-xl border border-gray-200 leading-relaxed">
+          <p class="text-gray-400 italic animate-pulse">Carregant condicions oficials des del document del centre...</p>
+        </div>
+
+        <div class="mb-6 bg-blue-50 p-3 rounded-xl border border-blue-100">
+          <label class="inline-flex items-start text-sm font-medium text-gray-700 cursor-pointer">
+            <input type="checkbox" id="aceptoTerminos" class="form-checkbox h-5 w-5 text-blue-600 rounded-md focus:ring-blue-500 mt-0.5">
+            <span class="ml-3 text-gray-600">Declaro que he llegit el document de l'Institut de l'Esport de Barcelona i <strong>accepto formalment totes les condicions</strong> de préstec.</span>
+          </label>
+        </div>
+
+        <div class="flex justify-end space-x-3">
+          <button type="button" onclick="closeModal()" class="px-5 py-2.5 bg-gray-100 rounded-xl text-gray-700 hover:bg-gray-200 transition-colors text-sm font-medium">Cancel·lar</button>
+          <button type="button" onclick="submitFinal()" class="px-5 py-2.5 bg-green-600 rounded-xl text-white hover:bg-green-700 shadow-md transition-colors text-sm font-bold">Acceptar i Enviar</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const idDocOriginal = "<?= idDocument ?>";
+
+    function openModal() {
+      const form = document.getElementById('prestamoForm');
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+      const modal = document.getElementById('modal');
+      modal.classList.remove('hidden', 'opacity-0', 'pointer-events-none');
+      document.body.classList.add('modal-active');
+
+      google.script.run
+        .withSuccessHandler(function(textoHtml) {
+          document.getElementById('contenidoDinamicoDoc').innerHTML = textoHtml;
+        })
+        .textCondicionsDoc(idDocOriginal);
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('modal');
+      modal.classList.add('hidden', 'opacity-0', 'pointer-events-none');
+      document.body.classList.remove('modal-active');
+    }
+
+    function submitFinal() {
+      const checkbox = document.getElementById('aceptoTerminos');
+      if (!checkbox.checked) {
+        alert('Heu d\'acceptar les condicions abans d\'enviar el formulari.');
+        return;
+      }
+      closeModal();
+      
+      const form = document.getElementById('prestamoForm');
+      const formData = new FormData(form);
+      const datos = {};
+      formData.forEach((value, key) => datos[key] = value);
+
+      const mainButton = document.querySelector("button[type='button']");
+      mainButton.disabled = true;
+      mainButton.innerText = "Enviant sol·licitud...";
+
+      google.script.run
+        .withSuccessHandler(function(response) {
+          form.reset();
+          document.getElementById('aceptoTerminos').checked = false;
+          mainButton.disabled = false;
+          mainButton.innerText = "Revisar Condicions i Enviar";
+          const msgDiv = document.getElementById('mensajeExito');
+          msgDiv.innerText = response;
+          msgDiv.classList.remove('hidden');
+        })
+        .guardarRegistro(datos);
+    }
+  </script>
+</body>
+</html>
