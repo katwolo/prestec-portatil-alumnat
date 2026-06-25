@@ -219,7 +219,14 @@ code{font-size:.78rem;background:var(--g100);padding:1px 5px;border-radius:4px}
       <div id="pet-main" style="display:none">
         <div id="pet-stats" style="margin-bottom:18px"></div>
         <div class="tw">
-          <div class="th"><h2>Sol·licituds rebudes</h2><button class="btn btn-out btn-sm" onclick="rPet()">🔄 Actualitzar</button></div>
+          <div class="th">
+            <h2>Sol·licituds rebudes</h2>
+            <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
+              <span id="pet-sel-count" style="display:none;font-size:.82rem;color:var(--g500)"></span>
+              <button class="btn btn-pri btn-sm" id="pet-btn-enviar" style="display:none" onclick="enviarAccCondicions()">📨 Enviar AcceptarCondicions</button>
+              <button class="btn btn-out btn-sm" onclick="rPet()">🔄 Actualitzar</button>
+            </div>
+          </div>
           <div id="pet-t"></div>
         </div>
       </div>
@@ -663,6 +670,7 @@ function sFCEdit() {
 let tplsData = { assumpte: '', plantilles: [] };
 let selTplId  = null;
 let corPreselAlu = null;
+let petData = [];
 
 function renderPH(txt, d) {
   if (!txt) return '';
@@ -1107,17 +1115,21 @@ function rPet() {
 }
 
 function rPetTable(data) {
-  if (!data || !data.length) {
+  petData = data || [];
+  document.querySelectorAll('.pet-chk').forEach(function(c) { c.checked = false; });
+  petUpdSel();
+
+  if (!petData.length) {
     document.getElementById('pet-stats').innerHTML = '';
     document.getElementById('pet-t').innerHTML = '<div class="es"><div class="ei">📝</div><p>No hi ha peticions registrades encara.</p></div>';
     return;
   }
-  var alta  = data.filter(function(d) { return d.preferencia === 'Alta'; }).length;
-  var mitja = data.filter(function(d) { return d.preferencia === 'Mitja'; }).length;
-  var baixa = data.filter(function(d) { return d.preferencia === 'Baixa'; }).length;
+  var alta  = petData.filter(function(d) { return d.preferencia === 'Alta'; }).length;
+  var mitja = petData.filter(function(d) { return d.preferencia === 'Mitja'; }).length;
+  var baixa = petData.filter(function(d) { return d.preferencia === 'Baixa'; }).length;
   document.getElementById('pet-stats').innerHTML =
     '<div class="cards">' +
-    '<div class="card c-g"><div class="lbl">Total sol·licituds</div><div class="val">' + data.length + '</div></div>' +
+    '<div class="card c-g"><div class="lbl">Total sol·licituds</div><div class="val">' + petData.length + '</div></div>' +
     '<div class="card" style="border-left:4px solid #e24b4a"><div class="lbl">Alta prioritat</div><div class="val" style="color:#e24b4a">' + alta + '</div></div>' +
     '<div class="card" style="border-left:4px solid #ef9f27"><div class="lbl">Prioritat mitjana</div><div class="val" style="color:#ef9f27">' + mitja + '</div></div>' +
     '<div class="card" style="border-left:4px solid #639922"><div class="lbl">Baixa prioritat</div><div class="val" style="color:#639922">' + baixa + '</div></div>' +
@@ -1128,8 +1140,9 @@ function rPetTable(data) {
     return '<span class="badge" style="background:' + c[0] + ';color:' + c[1] + '">' + escH(p || '—') + '</span>';
   };
   var rows = '';
-  data.forEach(function(d) {
+  petData.forEach(function(d, i) {
     rows += '<tr>' +
+      '<td style="text-align:center"><input type="checkbox" class="pet-chk" data-idx="' + i + '" onchange="petUpdSel()"></td>' +
       '<td style="font-size:.78rem;color:var(--g400)">' + escH(d.timestamp) + '</td>' +
       '<td><strong>' + escH(d.nom) + ' ' + escH(d.cognoms) + '</strong></td>' +
       '<td style="font-size:.82rem">' + escH(d.curs) + (d.classe ? ' · ' + escH(d.classe) : '') + '</td>' +
@@ -1139,7 +1152,62 @@ function rPetTable(data) {
       '</tr>';
   });
   document.getElementById('pet-t').innerHTML =
-    '<table><thead><tr><th>Data</th><th>Alumne/a</th><th>Curs / Classe</th><th>Correu</th><th>Coach</th><th>Prioritat</th></tr></thead><tbody>' + rows + '</tbody></table>';
+    '<table><thead><tr>' +
+    '<th style="width:36px"><input type="checkbox" id="pet-chk-all" onchange="petSelAll(this)"></th>' +
+    '<th>Data</th><th>Alumne/a</th><th>Curs / Classe</th><th>Correu</th><th>Coach</th><th>Prioritat</th>' +
+    '</tr></thead><tbody>' + rows + '</tbody></table>';
+}
+
+// ── PETICIONS SELECCIÓ I ENVIAMENT ──────────────
+function petSelAll(chk) {
+  document.querySelectorAll('.pet-chk').forEach(function(c) { c.checked = chk.checked; });
+  petUpdSel();
+}
+
+function petUpdSel() {
+  var sel = document.querySelectorAll('.pet-chk:checked').length;
+  var countEl = document.getElementById('pet-sel-count');
+  var btnEl   = document.getElementById('pet-btn-enviar');
+  if (!countEl || !btnEl) return;
+  if (sel > 0) {
+    countEl.textContent = sel + ' seleccionat' + (sel !== 1 ? 's' : '');
+    countEl.style.display = 'inline';
+    btnEl.style.display   = 'inline-flex';
+  } else {
+    countEl.style.display = 'none';
+    btnEl.style.display   = 'none';
+  }
+}
+
+function enviarAccCondicions() {
+  var checks = document.querySelectorAll('.pet-chk:checked');
+  var alumnes = [];
+  checks.forEach(function(c) { alumnes.push(petData[parseInt(c.dataset.idx)]); });
+  if (!alumnes.length) return;
+
+  if (!confirm('S\'enviarà el mail "AcceptarCondicions" a ' + alumnes.length + ' alumne' + (alumnes.length !== 1 ? 's' : '') + '.\n\nContinues?')) return;
+
+  var btn = document.getElementById('pet-btn-enviar');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span> Enviant...';
+
+  google.script.run
+    .withSuccessHandler(function(raw) {
+      var res; try { res = JSON.parse(raw); } catch(e) { res = { ok: false, msg: 'Error parsejant resposta.' }; }
+      btn.disabled = false;
+      btn.innerHTML = '📨 Enviar AcceptarCondicions';
+      alert(res.msg || (res.ok ? '✅ Fet!' : '❌ Error'));
+      document.querySelectorAll('.pet-chk').forEach(function(c) { c.checked = false; });
+      var allChk = document.getElementById('pet-chk-all');
+      if (allChk) allChk.checked = false;
+      petUpdSel();
+    })
+    .withFailureHandler(function(err) {
+      btn.disabled = false;
+      btn.innerHTML = '📨 Enviar AcceptarCondicions';
+      alert('❌ Error: ' + (err.message || String(err)));
+    })
+    .enviarAcceptarCondicionsLot(JSON.stringify(alumnes));
 }
 
 // ── SYNC ALUMNES ─────────────────────────────────

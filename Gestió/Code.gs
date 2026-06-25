@@ -534,3 +534,49 @@ function syncRegistreManual() {
     return JSON.stringify({ ok: false, msg: e.message });
   }
 }
+
+// ══════════════════════════════════════════════════════════════
+//  ENVIAMENT AcceptarCondicions DES DEL GESTOR
+// ══════════════════════════════════════════════════════════════
+
+function enviarAcceptarCondicionsLot(alumnesJson) {
+  try {
+    var alumnes = JSON.parse(alumnesJson);
+    if (!alumnes || !alumnes.length) return JSON.stringify({ ok: false, msg: 'No hi ha alumnes seleccionats.' });
+
+    var tplData   = JSON.parse(loadPlantilles());
+    var plantilla = null;
+    for (var i = 0; i < tplData.plantilles.length; i++) {
+      if (tplData.plantilles[i].id === 'AcceptarCondicions') { plantilla = tplData.plantilles[i]; break; }
+    }
+    if (!plantilla) return JSON.stringify({ ok: false, msg: 'No s\'ha trobat la plantilla "AcceptarCondicions" a la pestanya Plantilles del Gestor.' });
+
+    var assumpte = tplData.assumpte || 'Préstec portàtil';
+    var enviats = 0, errorsLlista = [];
+
+    alumnes.forEach(function(a) {
+      var dic = {
+        nombreAlumno:   a.nom       || '',
+        correoAlumno:   a.emailAlum || '',
+        nombreTutor:    a.coach     || '',
+        correoTutor:    a.emailCoach || '',
+        dadesPortatils: ''
+      };
+      var cos      = renderPlaceholders_(plantilla.cos, dic);
+      var assumpFi = renderPlaceholders_(assumpte, dic);
+      try {
+        GmailApp.sendEmail(a.emailAlum, assumpFi, '', { htmlBody: cos, name: 'Departament AFD' });
+        registrarEnviament_(a.emailAlum, assumpFi);
+        enviats++;
+      } catch(e) {
+        errorsLlista.push(a.nom + ' ' + a.cognoms + ': ' + e.message);
+      }
+    });
+
+    var msg = '✅ ' + enviats + ' correu' + (enviats !== 1 ? 's' : '') + ' enviat' + (enviats !== 1 ? 's' : '') + '.';
+    if (errorsLlista.length) msg += '\n⚠️ Errors:\n' + errorsLlista.join('\n');
+    return JSON.stringify({ ok: true, msg: msg, enviats: enviats });
+  } catch(e) {
+    return JSON.stringify({ ok: false, msg: e.message });
+  }
+}
