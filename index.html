@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Préstec Portàtils Alumnat</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--pri:#1a56a0;--pri-d:#143f7a;--pri-l:#e8f0fb;--ok:#16a34a;--warn:#d97706;--err:#dc2626;--rep:#7c3aed;--g50:#f9fafb;--g100:#f3f4f6;--g200:#e5e7eb;--g300:#d1d5db;--g400:#9ca3af;--g500:#6b7280;--g700:#374151;--g900:#111827;--sw:220px}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--g100);color:var(--g900);display:flex;min-height:100vh}
+#sb{width:var(--sw);background:var(--pri-d);color:#fff;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100}
+#sb .logo{padding:18px 16px;font-size:1.05rem;font-weight:700;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:8px}
+#sb nav a{display:flex;align-items:center;gap:10px;padding:10px 16px;color:rgba(255,255,255,.72);text-decoration:none;font-size:.88rem;cursor:pointer;transition:all .15s}
+#sb nav a:hover,#sb nav a.active{background:rgba(255,255,255,.13);color:#fff}
+#sb nav a .ic{font-size:1rem;width:20px;text-align:center}
+#main{margin-left:var(--sw);flex:1;display:flex;flex-direction:column}
+#topbar{background:#fff;border-bottom:1px solid var(--g200);padding:13px 22px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+#topbar h1{font-size:1.05rem;font-weight:600}
+#content{padding:22px;flex:1}
+.sec{display:none}.sec.active{display:block}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.card{background:#fff;border-radius:10px;padding:18px;border:1px solid var(--g200)}
+.card .lbl{font-size:.75rem;font-weight:500;color:var(--g500);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.card .val{font-size:2rem;font-weight:700;line-height:1}
+.c-ok .val{color:var(--ok)}.c-pri .val{color:var(--pri)}.c-rep .val{color:var(--rep)}.c-g .val{color:var(--g700)}
+.tw{background:#fff;border-radius:10px;border:1px solid var(--g200);overflow:hidden;margin-bottom:18px}
+.th{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--g200);gap:10px;flex-wrap:wrap}
+.th h2{font-size:.95rem;font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th{padding:9px 14px;text-align:left;font-size:.73rem;font-weight:600;color:var(--g500);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--g200);background:var(--g50)}
+td{padding:10px 14px;border-bottom:1px solid var(--g100);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--g50)}
+.badge{display:inline-flex;align-items:center;padding:2px 9px;border-radius:999px;font-size:.73rem;font-weight:600}
+.b-ok{background:#dcfce7;color:#15803d}.b-pri{background:#dbeafe;color:#1d4ed8}.b-rep{background:#ede9fe;color:#6d28d9}.b-g{background:var(--g200);color:var(--g500)}
+.btn{padding:7px 14px;border-radius:6px;border:none;font-size:.85rem;font-weight:500;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px}
+.btn-pri{background:var(--pri);color:#fff}.btn-pri:hover{background:var(--pri-d)}
+.btn-ok{background:var(--ok);color:#fff}.btn-ok:hover{background:#15803d}
+.btn-out{background:#fff;border:1px solid var(--g300);color:var(--g700)}.btn-out:hover{background:var(--g50)}
+.btn-warn{background:#f59e0b;color:#fff}.btn-warn:hover{background:var(--warn)}
+.btn-teal{background:#0d9488;color:#fff}.btn-teal:hover{background:#0f766e}
+.btn-sm{padding:5px 9px;font-size:.78rem}
+.inp,.sel,.ta{width:100%;padding:7px 11px;border:1px solid var(--g300);border-radius:6px;font-size:.85rem;font-family:inherit;color:var(--g900);background:#fff;transition:border-color .15s}
+.inp:focus,.sel:focus,.ta:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 3px rgba(26,86,160,.1)}
+.fg{margin-bottom:14px}.fg label{display:block;font-size:.83rem;font-weight:500;color:var(--g700);margin-bottom:5px}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center}
+.mo.open{display:flex}
+.mb{background:#fff;border-radius:12px;width:580px;max-width:96vw;max-height:92vh;overflow-y:auto;padding:22px;box-shadow:0 20px 50px rgba(0,0,0,.22)}
+.mb-lg{width:720px}
+.mh{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.mh h3{font-size:1rem;font-weight:600}
+.mc{background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--g400);line-height:1}
+.mf{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;padding-top:14px;border-top:1px solid var(--g200);flex-wrap:wrap}
+.sb{padding:7px 11px;border:1px solid var(--g300);border-radius:6px;font-size:.85rem;width:220px;font-family:inherit}
+.sb:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 3px rgba(26,86,160,.1)}
+.fs{padding:6px 9px;border:1px solid var(--g300);border-radius:6px;font-size:.85rem;font-family:inherit;background:#fff;cursor:pointer}
+.alert{padding:13px 16px;border-radius:8px;margin-bottom:18px;display:flex;align-items:flex-start;gap:10px;font-size:.88rem}
+.al-warn{background:#fef3c7;border:1px solid #fcd34d;color:#92400e}
+.al-ok{background:#dcfce7;border:1px solid #86efac;color:#15803d}
+.al-info{background:var(--pri-l);border:1px solid #93c5fd;color:var(--pri-d)}
+.al-err{background:#fef2f2;border:1px solid #fca5a5;color:#dc2626}
+.es{text-align:center;padding:44px 22px;color:var(--g400)}
+.es .ei{font-size:2.8rem;margin-bottom:10px}.es p{font-size:.88rem}
+.pwd-t{font-family:monospace;background:var(--g100);padding:2px 7px;border-radius:4px;font-size:.78rem;display:none}
+.pwd-t.vis{display:inline}
+.pwd-w{display:flex;gap:5px;align-items:center}
+/* Plantilla cards (correus) */
+.tc{background:#fff;border:2px solid var(--g200);border-radius:8px;padding:12px 14px;cursor:pointer;transition:all .15s;margin-bottom:7px}
+.tc:hover,.tc.sel{border-color:var(--pri);background:var(--pri-l)}
+.tc h4{font-size:.88rem;font-weight:600;color:var(--g900)}.tc p{font-size:.76rem;color:var(--g500);margin-top:3px}
+/* Previsualització correu */
+.ep-wrap{background:#fff;border:1px solid var(--g200);border-radius:10px;overflow:hidden;margin-bottom:12px}
+.ep-sub{padding:10px 16px;border-bottom:1px solid var(--g200);background:var(--g50);display:flex;align-items:baseline;gap:8px}
+.ep-sub .ep-sub-lbl{font-size:.72rem;font-weight:600;color:var(--g400);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+.ep-sub .ep-sub-val{font-size:.88rem;color:var(--g900);font-weight:500}
+.ep-body{padding:18px;font-size:.85rem;line-height:1.75;min-height:160px;color:var(--g700)}
+.ep-body p{margin-bottom:10px}.ep-body ul{margin:8px 0 8px 20px}.ep-body li{margin-bottom:4px}
+.ep-body a{color:var(--pri)}.ep-body b{font-weight:600}
+.ep-empty{color:var(--g400);font-style:italic}
+/* Secció títol */
+.sec-lbl{font-size:.72rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+/* Cor loading spinner */
+.spin{display:inline-block;width:18px;height:18px;border:2px solid var(--g300);border-top-color:var(--pri);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* Modal edició fi de curs */
+.sep{margin:14px 0 10px;font-size:.82rem;font-weight:600;color:var(--g700);border-top:1px solid var(--g200);padding-top:14px}
+code{font-size:.78rem;background:var(--g100);padding:1px 5px;border-radius:4px}
+.step-ind{display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid var(--g200)}
+.step{padding:8px 18px;font-size:.82rem;font-weight:500;color:var(--g400);border-bottom:2px solid transparent;margin-bottom:-2px}
+.step.act{color:var(--pri);border-bottom-color:var(--pri)}
+.step.done{color:var(--ok)}
+.map-row{display:grid;grid-template-columns:160px 1fr;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--g100)}
+.map-row:last-child{border-bottom:none}
+.map-lbl{font-size:.82rem;color:var(--g700)}
+.map-req{color:var(--err);font-weight:700;margin-left:2px}
+.drop-zone{border:2px dashed var(--g300);border-radius:10px;padding:28px;text-align:center;cursor:pointer;transition:all .2s;background:var(--g50)}
+.drop-zone:hover,.drop-zone.drag{border-color:var(--pri);background:var(--pri-l)}
+.drop-zone .di{font-size:2.2rem;margin-bottom:8px}
+.drop-zone p{font-size:.88rem;color:var(--g500)}
+.drop-zone strong{color:var(--pri)}
+.imp-chip{display:inline-flex;align-items:center;gap:6px;background:var(--pri-l);border:1px solid #93c5fd;border-radius:6px;padding:5px 10px;font-size:.82rem;color:var(--pri-d);margin-top:10px}
+.prev-wrap{overflow-x:auto;max-height:200px;overflow-y:auto;border:1px solid var(--g200);border-radius:6px}
+.prev-wrap table{font-size:.78rem}
+.prev-wrap th{position:sticky;top:0;z-index:1}
+.type-pills{display:flex;gap:8px;margin-bottom:18px}
+.type-pill{flex:1;padding:10px;border:2px solid var(--g200);border-radius:8px;text-align:center;cursor:pointer;transition:all .15s;font-size:.88rem;font-weight:500;color:var(--g500)}
+.type-pill:hover{border-color:var(--pri);color:var(--pri)}
+.type-pill.act{border-color:var(--pri);background:var(--pri-l);color:var(--pri-d)}
+.type-pill .pi{font-size:1.4rem;display:block;margin-bottom:4px}
+/* Overlay de desant */
+#saving-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:999;align-items:center;justify-content:center}
+#saving-overlay.show{display:flex}
+#saving-box{background:#fff;border-radius:12px;padding:24px 32px;display:flex;align-items:center;gap:14px;font-size:.95rem;font-weight:500;color:var(--g700);box-shadow:0 10px 30px rgba(0,0,0,.2)}
+@media(max-width:860px){.cards{grid-template-columns:repeat(2,1fr)}.fr{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- Overlay global "Desant..." -->
+<div id="saving-overlay">
+  <div id="saving-box"><span class="spin"></span> Desant al full de càlcul...</div>
+</div>
+
+<div id="sb">
+  <div class="logo">💻 Préstec Portàtils Alumnat</div>
+  <nav>
+    <a class="nl active" data-s="dashboard"><span class="ic">📊</span>Tauler</a>
+    <a class="nl" data-s="inventari"><span class="ic">🖥️</span>Inventari</a>
+    <a class="nl" data-s="alumnes"><span class="ic">👨‍🎓</span>Alumnat</a>
+    <a class="nl" data-s="prestecs"><span class="ic">📋</span>Préstecs actius</a>
+    <a class="nl" data-s="historial"><span class="ic">🔍</span>Historial</a>
+    <a class="nl" data-s="ficurs"><span class="ic">⚠️</span>Fi de curs</a>
+    <a class="nl" data-s="correus"><span class="ic">✉️</span>Correus</a>
+  </nav>
+</div>
+
+<div id="main">
+  <div id="topbar">
+    <h1 id="ttl">Tauler</h1>
+    <div style="display:flex;gap:7px">
+      <button class="btn btn-teal btn-sm" onclick="oImport()">⬆️ Importar CSV</button>
+      <button class="btn btn-out btn-sm" onclick="exportCSV()">⬇️ Exportar CSV</button>
+    </div>
+  </div>
+  <div id="content">
+
+    <!-- DASHBOARD -->
+    <div class="sec active" id="sec-dashboard">
+      <div class="cards" id="dash-cards"></div>
+      <div class="tw"><div class="th"><h2>Préstecs recents</h2></div><div id="dash-recent"></div></div>
+    </div>
+
+    <!-- INVENTARI -->
+    <div class="sec" id="sec-inventari">
+      <div class="tw">
+        <div class="th">
+          <h2>Inventari de portàtils</h2>
+          <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center">
+            <input class="sb" placeholder="🔍 Cerca..." id="inv-q" oninput="rInv()">
+            <select class="fs" id="inv-f" onchange="rInv()">
+              <option value="">Tots els estats</option>
+              <option value="disponible">Disponible</option>
+              <option value="assignat">Assignat</option>
+              <option value="reparacio">En reparació</option>
+              <option value="baixa">Baixa</option>
+            </select>
+            <button class="btn btn-teal btn-sm" onclick="oImport('portatils')">⬆️ Importar</button>
+            <button class="btn btn-pri btn-sm" onclick="oMP()">+ Afegir</button>
+          </div>
+        </div>
+        <div id="inv-t"></div>
+      </div>
+    </div>
+
+    <!-- ALUMNAT -->
+    <div class="sec" id="sec-alumnes">
+      <div class="tw">
+        <div class="th">
+          <h2>Alumnat</h2>
+          <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
+            <input class="sb" placeholder="🔍 Cerca alumne..." id="alu-q" oninput="rAlu()">
+            <button class="btn btn-teal btn-sm" onclick="oImport('alumnes')">⬆️ Importar</button>
+            <button class="btn btn-pri btn-sm" onclick="oMA()">+ Afegir</button>
+          </div>
+        </div>
+        <div id="alu-t"></div>
+      </div>
+    </div>
+
+    <!-- PRÉSTECS ACTIUS -->
+    <div class="sec" id="sec-prestecs">
+      <div class="tw">
+        <div class="th"><h2>Préstecs actius</h2><button class="btn btn-pri btn-sm" onclick="oPres()">+ Nou préstec</button></div>
+        <div id="pres-t"></div>
+      </div>
+    </div>
+
+    <!-- HISTORIAL -->
+    <div class="sec" id="sec-historial">
+      <div class="tw">
+        <div class="th"><h2>Historial</h2><input class="sb" placeholder="🔍 Alumne o portàtil..." id="hist-q" oninput="rHist()"></div>
+        <div id="hist-t" style="padding:16px"></div>
+      </div>
+    </div>
+
+    <!-- FI DE CURS -->
+    <div class="sec" id="sec-ficurs"><div id="ficurs-c"></div></div>
+
+    <!-- CORREUS -->
+    <div class="sec" id="sec-correus">
+      <div id="cor-loading" style="text-align:center;padding:60px 22px;color:var(--g400)">
+        <div style="font-size:2rem;margin-bottom:12px">✉️</div>
+        <p><span class="spin"></span>Carregant plantilles del full de càlcul...</p>
+      </div>
+      <div id="cor-error" style="display:none">
+        <div class="alert al-err">⚠️ <div><strong>Error carregant les plantilles.</strong><br><span id="cor-err-msg"></span></div></div>
+        <button class="btn btn-out btn-sm" onclick="rCor()">🔄 Reintentar</button>
+      </div>
+      <div id="cor-empty" style="display:none">
+        <div class="es">
+          <div class="ei">📄</div>
+          <p style="margin-bottom:10px">No hi ha plantilles definides.</p>
+          <p style="font-size:.8rem;max-width:380px;margin:0 auto">Afegeix plantilles a la pestanya <strong>Plantilles</strong> del full de càlcul.<br>
+          Fila 1·B: assumpte — Fila 4: capçaleres — Fila 5+: dades.</p>
+        </div>
+        <div style="text-align:center;margin-top:8px"><button class="btn btn-out btn-sm" onclick="rCor()">🔄 Recarregar</button></div>
+      </div>
+      <div id="cor-main" style="display:none">
+        <div style="display:grid;grid-template-columns:250px 1fr;gap:20px;align-items:start">
+          <div>
+            <div class="sec-lbl">Plantilles</div>
+            <div id="tpl-list"></div>
+            <div style="margin-top:10px">
+              <button class="btn btn-out btn-sm" style="width:100%;justify-content:center" onclick="rCor()">🔄 Actualitzar</button>
+            </div>
+          </div>
+          <div>
+            <div class="fr" style="margin-bottom:14px">
+              <div class="fg" style="margin:0">
+                <label>Alumne/a *</label>
+                <select class="sel" id="cor-alu" onchange="rEP()">
+                  <option value="">— Selecciona alumne/a —</option>
+                </select>
+              </div>
+              <div class="fg" style="margin:0">
+                <label>Destinatari</label>
+                <select class="sel" id="cor-dest" onchange="rEP()">
+                  <option value="alumnat">👨‍🎓 Alumne/a</option>
+                  <option value="coach">👤 Tutor/a</option>
+                  <option value="ambdós">👥 Ambdós</option>
+                </select>
+              </div>
+            </div>
+            <div id="cor-dest-info" style="display:none;margin-bottom:14px"></div>
+            <div class="sec-lbl">Previsualització</div>
+            <div class="ep-wrap" id="ep-wrap">
+              <div class="ep-sub">
+                <span class="ep-sub-lbl">Assumpte:</span>
+                <span class="ep-sub-val ep-empty" id="ep-sub">—</span>
+              </div>
+              <div class="ep-body" id="ep-view">
+                <span class="ep-empty">Selecciona una plantilla i un alumne/a per veure la previsualització.</span>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-pri" id="btn-enviar" onclick="enviarCorreu()">📨 Enviar ara</button>
+              <button class="btn btn-out btn-sm" onclick="copyEmail()">📋 Copiar text</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ MODAL portàtil ═══ -->
+<div class="mo" id="mo-p">
+  <div class="mb">
+    <div class="mh"><h3 id="mp-ttl">Nou portàtil</h3><button class="mc" onclick="cM('mo-p')">×</button></div>
+    <input type="hidden" id="mp-id">
+    <div class="fr">
+      <div class="fg"><label>Marca *</label><input class="inp" id="mp-marca" placeholder="Ex: Lenovo"></div>
+      <div class="fg"><label>Model *</label><input class="inp" id="mp-model" placeholder="Ex: IdeaPad 3"></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label>SACE *</label><input class="inp" id="mp-sace" placeholder="Ex: PC-01"></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label>Estat</label>
+        <select class="sel" id="mp-estat"><option value="disponible">Disponible</option><option value="reparacio">En reparació</option><option value="baixa">Baixa</option></select>
+      </div>
+      <div class="fg"><label>Usuari del dispositiu</label><input class="inp" id="mp-usr" placeholder="Ex: admin"></div>
+    </div>
+    <div class="fg"><label>Contrasenya / Credencials</label><input class="inp" id="mp-pwd" placeholder="Ex: Abc12345"></div>
+    <div class="fg"><label>Observacions</label><textarea class="ta" id="mp-obs" rows="2" placeholder="Notes sobre l'estat, accessoris..."></textarea></div>
+    <div class="mf">
+      <button class="btn btn-out" onclick="cM('mo-p')">Cancel·lar</button>
+      <button class="btn btn-pri" onclick="sP()">Desar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL alumne ═══ -->
+<div class="mo" id="mo-a">
+  <div class="mb">
+    <div class="mh"><h3 id="ma-ttl">Nou alumne/a</h3><button class="mc" onclick="cM('mo-a')">×</button></div>
+    <input type="hidden" id="ma-id">
+    <div class="fr">
+      <div class="fg"><label>Nom *</label><input class="inp" id="ma-nom" placeholder="Ex: Marc"></div>
+      <div class="fg"><label>Cognoms *</label><input class="inp" id="ma-cog" placeholder="Ex: García López"></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label>Curs</label><input class="inp" id="ma-curs" placeholder="Ex: 2025-2026"></div>
+      <div class="fg"><label>Grup</label><input class="inp" id="ma-grup" placeholder="Ex: 2nEAS_A"></div>
+    </div>
+    <div class="fg"><label>Correu electrònic</label><input class="inp" id="ma-email" type="email" placeholder="Ex: alumne@email.com"></div>
+    <div class="sep">👤 Tutor / Tutora legal</div>
+    <div class="fg"><label>Nom complet del tutor/a</label><input class="inp" id="ma-tnom" placeholder="Ex: Maria García"></div>
+    <div class="fg"><label>Correu del tutor/a</label><input class="inp" id="ma-temail" type="email" placeholder="Ex: tutor@email.com"></div>
+    <div class="mf">
+      <button class="btn btn-out" onclick="cM('mo-a')">Cancel·lar</button>
+      <button class="btn btn-pri" onclick="sA()">Desar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL préstec ═══ -->
+<div class="mo" id="mo-pr">
+  <div class="mb">
+    <div class="mh"><h3>Nou préstec</h3><button class="mc" onclick="cM('mo-pr')">×</button></div>
+    <div class="fg"><label>Alumne/a *</label><select class="sel" id="pr-alu"></select></div>
+    <div class="fg"><label>Portàtil *</label><select class="sel" id="pr-pc"></select></div>
+    <div class="fr">
+      <div class="fg"><label>Data d'entrega *</label><input class="inp" type="date" id="pr-data"></div>
+      <div class="fg"><label>Curs acadèmic</label><input class="inp" id="pr-curs" placeholder="Ex: 2024-2025"></div>
+    </div>
+    <div class="fg"><label>Observacions</label><textarea class="ta" id="pr-obs" rows="2"></textarea></div>
+    <div class="mf">
+      <button class="btn btn-out" onclick="cM('mo-pr')">Cancel·lar</button>
+      <button class="btn btn-pri" onclick="sPr()">Confirmar préstec</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL devolució ═══ -->
+<div class="mo" id="mo-d">
+  <div class="mb">
+    <div class="mh"><h3>Registrar devolució</h3><button class="mc" onclick="cM('mo-d')">×</button></div>
+    <input type="hidden" id="dv-id">
+    <div id="dv-info" style="background:var(--g50);padding:11px;border-radius:8px;margin-bottom:14px;font-size:.85rem"></div>
+    <div class="fr">
+      <div class="fg"><label>Data de devolució *</label><input class="inp" type="date" id="dv-data"></div>
+      <div class="fg"><label>Estat del portàtil en retornar</label>
+        <select class="sel" id="dv-estat"><option value="disponible">Bo — disponible</option><option value="reparacio">Necessita reparació</option><option value="baixa">Baixa</option></select>
+      </div>
+    </div>
+    <div class="fg"><label>Observacions</label><textarea class="ta" id="dv-obs" rows="2"></textarea></div>
+    <div class="mf">
+      <button class="btn btn-out" onclick="cM('mo-d')">Cancel·lar</button>
+      <button class="btn btn-ok" onclick="sDv()">✓ Confirmar devolució</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL edició préstec (fi de curs) ═══ -->
+<div class="mo" id="mo-fc-edit">
+  <div class="mb">
+    <div class="mh"><h3>Editar préstec</h3><button class="mc" onclick="cM('mo-fc-edit')">×</button></div>
+    <input type="hidden" id="fce-id">
+    <div id="fce-info" style="background:var(--g50);padding:11px;border-radius:8px;margin-bottom:18px;font-size:.85rem"></div>
+    <div class="fr">
+      <div class="fg"><label>Data d'entrega</label><input class="inp" type="date" id="fce-dataE"></div>
+      <div class="fg"><label>Curs acadèmic</label><input class="inp" id="fce-curs" placeholder="Ex: 2024-2025"></div>
+    </div>
+    <div class="fg"><label>Observacions</label><textarea class="ta" id="fce-obs" rows="2"></textarea></div>
+    <div class="mf">
+      <button class="btn btn-out" onclick="cM('mo-fc-edit')">Cancel·lar</button>
+      <button class="btn btn-pri" onclick="sFCEdit()">Desar canvis</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL importació CSV ═══ -->
+<div class="mo" id="mo-imp">
+  <div class="mb mb-lg">
+    <div class="mh"><h3>Importar dades des de CSV</h3><button class="mc" onclick="cM('mo-imp')">×</button></div>
+    <div class="step-ind">
+      <div class="step act" id="st-1">① Arxiu i tipus</div>
+      <div class="step" id="st-2">② Assignar columnes</div>
+      <div class="step" id="st-3">③ Confirmar</div>
+    </div>
+    <div id="imp-s1">
+      <div style="font-size:.83rem;font-weight:500;color:var(--g700);margin-bottom:10px">Tipus de dades a importar</div>
+      <div class="type-pills">
+        <div class="type-pill act" id="pill-alumnes" onclick="setTipus('alumnes')"><span class="pi">👨‍🎓</span>Alumnat</div>
+        <div class="type-pill" id="pill-portatils" onclick="setTipus('portatils')"><span class="pi">🖥️</span>Portàtils</div>
+      </div>
+      <div class="drop-zone" id="drop-z" onclick="document.getElementById('imp-file').click()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="impDrop(event)">
+        <div class="di">📂</div>
+        <p>Fes clic o arrossega el fitxer CSV aquí</p>
+        <p style="font-size:.78rem;margin-top:4px">Format: <strong>.csv</strong> · Separador: coma o punt i coma · Primera fila = capçalera</p>
+      </div>
+      <input type="file" id="imp-file" accept=".csv,.txt" style="display:none" onchange="impLoad()">
+      <div id="imp-chip-wrap"></div>
+      <div id="imp-hint" style="margin-top:14px;background:var(--g50);border:1px solid var(--g200);border-radius:8px;padding:12px;font-size:.8rem;line-height:1.6"></div>
+    </div>
+    <div id="imp-s2" style="display:none">
+      <div style="font-size:.83rem;font-weight:500;color:var(--g700);margin-bottom:10px">Assigna cada camp de l'aplicació a una columna del teu CSV:</div>
+      <div id="imp-map"></div>
+    </div>
+    <div id="imp-s3" style="display:none">
+      <div class="alert al-info" id="imp-sum-alert"></div>
+      <div style="font-size:.83rem;font-weight:500;color:var(--g700);margin-bottom:8px">Previsualització (primeres 5 files)</div>
+      <div class="prev-wrap" id="imp-prev"></div>
+      <div style="margin-top:10px;font-size:.8rem;color:var(--g500)" id="imp-skip-info"></div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-out" onclick="cM('mo-imp')">Cancel·lar</button>
+      <button class="btn btn-out" id="imp-btn-back" style="display:none" onclick="impBack()">← Enrere</button>
+      <button class="btn btn-pri" id="imp-btn-next" onclick="impNext()" disabled>Continuar →</button>
+      <button class="btn btn-ok" id="imp-btn-conf" style="display:none" onclick="impConfirm()">✓ Importar registres</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DB ──────────────────────────────────────────
+let db = { portatils: [], alumnes: [], prestecs: [] };
+
+function lDB(callback) {
+  google.script.run
+    .withSuccessHandler(function(raw) {
+      try { if (raw) db = JSON.parse(raw); } catch(e) {}
+      if (callback) callback();
+    })
+    .withFailureHandler(function(err) {
+      console.error('Error carregant DB:', err);
+      if (callback) callback();
+    })
+    .loadDB();
+}
+
+/**
+ * Desa només els registres indicats (upsert per ID) — molt més ràpid.
+ * @param {object|function} changes  { portatils:[...], alumnes:[...], prestecs:[...] }
+ *   Si es passa directament una funció (crida antiga), envia tota la DB (fallback).
+ * @param {function} [callback]
+ */
+function sDB(changes, callback) {
+  // Compatibilitat crida antiga sDB(callback) → full save (per a importació CSV)
+  if (typeof changes === 'function') {
+    callback = changes;
+    _sendSave('saveDB', JSON.stringify(db), callback);
+    return;
+  }
+  _sendSave('saveChanges', JSON.stringify(changes), callback);
+}
+
+function _sendSave(fnName, payload, callback) {
+  document.getElementById('saving-overlay').classList.add('show');
+  google.script.run
+    .withSuccessHandler(function() {
+      document.getElementById('saving-overlay').classList.remove('show');
+      if (callback) callback();
+    })
+    .withFailureHandler(function(err) {
+      document.getElementById('saving-overlay').classList.remove('show');
+      console.error('Error desant:', err);
+      alert('❌ Error desant les dades al full de càlcul:\n' + (err.message || String(err)));
+    })
+    [fnName](payload);
+}
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+function today() { return new Date().toISOString().split('T')[0]; }
+function fD(d) { if (!d) return '—'; const [y, m, dd] = d.split('-'); return dd + '/' + m + '/' + y; }
+function dias(d) { if (!d) return 0; return Math.floor((Date.now() - new Date(d)) / 86400000); }
+function gP(id) { return db.portatils.find(p => p.id === id); }
+function gA(id) { return db.alumnes.find(a => a.id === id); }
+function nC(a) { return a ? a.nom + ' ' + a.cog : '—'; }
+function pL(p) { return p ? (p.sace || '—') + ' · ' + p.marca + ' ' + p.model : '—'; }
+function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escQ(s) { return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+function bEst(e) {
+  const m = { disponible: ['b-ok', 'Disponible'], assignat: ['b-pri', 'Assignat'], reparacio: ['b-rep', 'En reparació'], baixa: ['b-g', 'Baixa'] };
+  const [c, t] = m[e] || ['b-g', e]; return '<span class="badge ' + c + '">' + t + '</span>';
+}
+
+// ── NAV ─────────────────────────────────────────
+const TITLES = { dashboard: 'Tauler', inventari: 'Inventari de portàtils', alumnes: 'Alumnat', prestecs: 'Préstecs actius', historial: 'Historial', ficurs: 'Fi de curs', correus: 'Correus' };
+document.querySelectorAll('.nl').forEach(a => {
+  a.addEventListener('click', () => {
+    const s = a.dataset.s;
+    document.querySelectorAll('.nl').forEach(x => x.classList.remove('active'));
+    a.classList.add('active');
+    document.querySelectorAll('.sec').forEach(x => x.classList.remove('active'));
+    document.getElementById('sec-' + s).classList.add('active');
+    document.getElementById('ttl').textContent = TITLES[s];
+    rSec(s);
+  });
+});
+function rSec(s) {
+  if (s === 'dashboard') rDash();
+  else if (s === 'inventari') rInv();
+  else if (s === 'alumnes') rAlu();
+  else if (s === 'prestecs') rPres();
+  else if (s === 'historial') rHist();
+  else if (s === 'ficurs') rFC();
+  else if (s === 'correus') rCor();
+}
+function curSec() { return document.querySelector('.nl.active')?.dataset?.s || 'dashboard'; }
+
+// ── DASHBOARD ───────────────────────────────────
+function rDash() {
+  const tot = db.portatils.length, disp = db.portatils.filter(p => p.estat === 'disponible').length;
+  const ass = db.portatils.filter(p => p.estat === 'assignat').length, rep = db.portatils.filter(p => p.estat === 'reparacio').length;
+  document.getElementById('dash-cards').innerHTML =
+    '<div class="card c-g"><div class="lbl">Total portàtils</div><div class="val">' + tot + '</div></div>' +
+    '<div class="card c-ok"><div class="lbl">Disponibles</div><div class="val">' + disp + '</div></div>' +
+    '<div class="card c-pri"><div class="lbl">Assignats</div><div class="val">' + ass + '</div></div>' +
+    '<div class="card c-rep"><div class="lbl">En reparació</div><div class="val">' + rep + '</div></div>';
+  const rec = [...db.prestecs].sort((a, b) => (b.dataE || '').localeCompare(a.dataE || '')).slice(0, 8);
+  if (!rec.length) { document.getElementById('dash-recent').innerHTML = '<div class="es"><div class="ei">📋</div><p>Encara no hi ha préstecs registrats.</p></div>'; return; }
+  let rows = '';
+  rec.forEach(p => { const a = gA(p.aId), pc = gP(p.pId); rows += '<tr><td>' + nC(a) + '</td><td>' + pL(pc) + '</td><td>' + fD(p.dataE) + '</td><td>' + (p.estat === 'actiu' ? bEst('assignat') : '<span class="badge b-ok">Tancat</span>') + '</td></tr>'; });
+  document.getElementById('dash-recent').innerHTML = '<table><thead><tr><th>Alumne/a</th><th>Portàtil</th><th>Data entrega</th><th>Estat</th></tr></thead><tbody>' + rows + '</tbody></table>';
+}
+
+// ── INVENTARI ───────────────────────────────────
+function rInv() {
+  const q = (document.getElementById('inv-q')?.value || '').toLowerCase();
+  const f = document.getElementById('inv-f')?.value || '';
+  const list = db.portatils.filter(p => {
+    const ok = (p.marca + ' ' + p.model + ' ' + (p.sace || '')).toLowerCase().includes(q);
+    return ok && (f ? p.estat === f : true);
+  });
+  if (!list.length) { document.getElementById('inv-t').innerHTML = '<div class="es"><div class="ei">🖥️</div><p>' + (db.portatils.length ? 'Cap resultat.' : 'Afegeix portàtils manualment o importa un CSV.') + '</p></div>'; return; }
+  let rows = '';
+  list.forEach(p => {
+    const pr = db.prestecs.find(x => x.pId === p.id && x.estat === 'actiu');
+    const a = pr ? gA(pr.aId) : null;
+    const cred = p.pwd ? '<div class="pwd-w"><span class="pwd-t" id="pw-' + p.id + '">' + (p.usr ? p.usr + ' / ' : '') + p.pwd + '</span><button class="btn btn-out btn-sm" onclick="tPwd(\'' + p.id + '\')">👁️</button></div>' : '<span style="font-size:.8rem;color:var(--g400);font-style:italic">No definides</span>';
+    const alumTxt = a ? '<span style="font-size:.82rem">' + nC(a) + '<br><span style="color:var(--g400);font-size:.75rem">' + (a.curs || '') + ' ' + (a.grup || '') + '</span></span>' : '—';
+    let acts = '<button class="btn btn-out btn-sm" onclick="oMP(\'' + p.id + '\')">✏️</button> ';
+    if (p.estat === 'disponible') acts += '<button class="btn btn-pri btn-sm" onclick="oPresP(\'' + p.id + '\')">📋 Préstec</button>';
+    if (p.estat === 'assignat' && pr) acts += '<button class="btn btn-ok btn-sm" onclick="oD(\'' + pr.id + '\')">↩ Devol.</button>';
+    rows += '<tr><td><strong>' + (p.sace || '—') + '</strong></td><td>' + p.marca + ' ' + p.model + '</td><td>' + bEst(p.estat) + '</td><td>' + cred + '</td><td>' + alumTxt + '</td><td><div style="display:flex;gap:4px;flex-wrap:wrap">' + acts + '</div></td></tr>';
+  });
+  document.getElementById('inv-t').innerHTML = '<table><thead><tr><th>SACE</th><th>Marca / Model</th><th>Estat</th><th>Credencials</th><th>Alumne/a assignat/da</th><th>Accions</th></tr></thead><tbody>' + rows + '</tbody></table>';
+}
+function tPwd(id) { document.getElementById('pw-' + id)?.classList.toggle('vis'); }
+
+// ── ALUMNAT ─────────────────────────────────────
+function rAlu() {
+  const q = (document.getElementById('alu-q')?.value || '').toLowerCase();
+  const list = db.alumnes.filter(a => (a.nom + ' ' + a.cog + ' ' + (a.curs || '') + ' ' + (a.email || '')).toLowerCase().includes(q));
+  if (!list.length) { document.getElementById('alu-t').innerHTML = '<div class="es"><div class="ei">👨‍🎓</div><p>' + (db.alumnes.length ? 'Cap resultat.' : 'Afegeix alumnes manualment o importa un CSV.') + '</p></div>'; return; }
+  let rows = '';
+  list.forEach(a => {
+    const pr = db.prestecs.find(p => p.aId === a.id && p.estat === 'actiu');
+    const pc = pr ? gP(pr.pId) : null;
+    const cont = a.email ? '<a href="mailto:' + a.email + '" style="color:var(--pri)">' + a.email + '</a>' : '<span style="color:var(--g400);font-size:.8rem">—</span>';
+    const tutTxt = '<span style="font-size:.8rem">' + (a.tnom || '—') + '<br><span style="color:var(--g400)">' + (a.temail || '') + '</span></span>';
+    const pcTxt = pc ? '<span class="badge b-pri">' + pL(pc) + '</span>' : '<span style="color:var(--g400);font-size:.8rem">Cap</span>';
+    rows += '<tr><td><strong>' + nC(a) + '</strong></td><td style="font-size:.82rem">' + (a.curs || '—') + (a.grup ? ' · ' + a.grup : '') + '</td><td>' + cont + '</td><td>' + tutTxt + '</td><td>' + pcTxt + '</td><td><div style="display:flex;gap:4px"><button class="btn btn-out btn-sm" onclick="oMA(\'' + a.id + '\')">✏️</button></div></td></tr>';
+  });
+  document.getElementById('alu-t').innerHTML = '<table><thead><tr><th>Nom complet</th><th>Curs / Grup</th><th>Correu electrònic</th><th>Tutor/a</th><th>Portàtil assignat</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>';
+}
+
+// ── PRÉSTECS ────────────────────────────────────
+function rPres() {
+  const act = db.prestecs.filter(p => p.estat === 'actiu').sort((a, b) => (a.dataE || '').localeCompare(b.dataE || ''));
+  if (!act.length) { document.getElementById('pres-t').innerHTML = '<div class="es"><div class="ei">📋</div><p>No hi ha préstecs actius.</p></div>'; return; }
+  let rows = '';
+  act.forEach(p => {
+    const a = gA(p.aId), pc = gP(p.pId);
+    const d = dias(p.dataE);
+    const col = d > 300 ? 'var(--err)' : d > 180 ? 'var(--warn)' : 'var(--g700)';
+    rows += '<tr><td><strong>' + nC(a) + '</strong></td><td style="font-size:.8rem">' + (a?.curs || '—') + (a?.grup ? ' · ' + a.grup : '') + '</td><td>' + pL(pc) + '</td><td>' + fD(p.dataE) + '</td><td><span style="color:' + col + ';font-weight:600">' + d + ' dies</span></td><td>' + (p.curs || '—') + '</td><td><div style="display:flex;gap:4px"><button class="btn btn-ok btn-sm" onclick="oD(\'' + p.id + '\')">↩ Devolució</button><button class="btn btn-out btn-sm" title="Enviar correu" onclick="goCorreu(\'' + p.id + '\')">✉️</button></div></td></tr>';
+  });
+  document.getElementById('pres-t').innerHTML = '<table><thead><tr><th>Alumne/a</th><th>Curs/Grup</th><th>Portàtil</th><th>Data entrega</th><th>Dies</th><th>Curs acadèmic</th><th>Accions</th></tr></thead><tbody>' + rows + '</tbody></table>';
+}
+
+// ── HISTORIAL ───────────────────────────────────
+function rHist() {
+  const q = (document.getElementById('hist-q')?.value || '').toLowerCase();
+  if (!q) { document.getElementById('hist-t').innerHTML = '<div class="es"><div class="ei">🔍</div><p>Escriu el nom d\'un alumne/a o el codi d\'un portàtil per veure el seu historial.</p></div>'; return; }
+  const list = db.prestecs.filter(p => { const a = gA(p.aId), pc = gP(p.pId); return (nC(a) + ' ' + pL(pc)).toLowerCase().includes(q); }).sort((a, b) => (b.dataE || '').localeCompare(a.dataE || ''));
+  if (!list.length) { document.getElementById('hist-t').innerHTML = '<div class="es"><div class="ei">🔍</div><p>Cap resultat per a "<strong>' + q + '</strong>".</p></div>'; return; }
+  let rows = '';
+  list.forEach(p => { const a = gA(p.aId), pc = gP(p.pId); rows += '<tr><td>' + nC(a) + '</td><td>' + pL(pc) + '</td><td>' + fD(p.dataE) + '</td><td>' + (p.dataD ? fD(p.dataD) : '—') + '</td><td>' + (p.curs || '—') + '</td><td>' + (p.estat === 'actiu' ? bEst('assignat') : '<span class="badge b-ok">Tancat</span>') + '</td><td style="font-size:.78rem;color:var(--g500)">' + (p.obs || '—') + '</td></tr>'; });
+  document.getElementById('hist-t').innerHTML = '<table><thead><tr><th>Alumne/a</th><th>Portàtil</th><th>Entrega</th><th>Devolució</th><th>Curs</th><th>Estat</th><th>Observ.</th></tr></thead><tbody>' + rows + '</tbody></table>';
+}
+
+// ── FI DE CURS ──────────────────────────────────
+function rFC() {
+  const act = db.prestecs.filter(p => p.estat === 'actiu');
+  if (!act.length) { document.getElementById('ficurs-c').innerHTML = '<div class="alert al-ok">✅ <div><strong>Cap portàtil pendent de devolució.</strong> Tot en ordre!</div></div>'; return; }
+  let rows = '';
+  act.sort((a, b) => (a.dataE || '').localeCompare(b.dataE || '')).forEach(p => {
+    const a = gA(p.aId), pc = gP(p.pId); const d = dias(p.dataE); const col = d > 300 ? 'var(--err)' : d > 180 ? 'var(--warn)' : 'inherit';
+    rows += '<tr><td><strong>' + nC(a) + '</strong></td><td style="font-size:.8rem">' + (a?.curs || '—') + (a?.grup ? ' · ' + a.grup : '') + '</td><td>' + pL(pc) + '</td><td>' + fD(p.dataE) + '</td><td style="color:' + col + ';font-weight:600">' + d + 'd</td><td style="font-size:.8rem">' + (p.curs || '—') + '</td><td style="font-size:.8rem">' + (a?.temail || a?.email || '—') + '</td><td><div style="display:flex;gap:4px"><button class="btn btn-out btn-sm" title="Editar dates / curs" onclick="oFCEdit(\'' + p.id + '\')">✏️</button><button class="btn btn-ok btn-sm" onclick="oD(\'' + p.id + '\')">↩</button><button class="btn btn-out btn-sm" title="Enviar correu" onclick="goCorreu(\'' + p.id + '\')">✉️</button></div></td></tr>';
+  });
+  document.getElementById('ficurs-c').innerHTML = '<div class="alert al-warn">⚠️ <div><strong>' + act.length + ' portàtil' + (act.length > 1 ? 's' : '') + ' pendent' + (act.length > 1 ? 's' : '') + ' de devolució.</strong></div></div><div class="tw"><div class="th"><h2>Préstecs a tancar</h2><button class="btn btn-warn btn-sm" onclick="tornarTots()">↩ Marcar tots com a retornats (avui)</button></div><table><thead><tr><th>Alumne/a</th><th>Curs/Grup</th><th>Portàtil</th><th>Data entrega</th><th>Dies</th><th>Curs acadèmic</th><th>Contacte</th><th>Accions</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+}
+
+function tornarTots() {
+  if (!confirm('Marcar tots els préstecs actius com a retornats avui?')) return;
+  const t = today();
+  const changedPrestecs = [], changedPcs = [];
+  db.prestecs.forEach(p => { if (p.estat === 'actiu') { p.estat = 'tancat'; p.dataD = t; changedPrestecs.push(p); const pc = gP(p.pId); if (pc) { pc.estat = 'disponible'; changedPcs.push(pc); } } });
+  sDB({ portatils: changedPcs, alumnes: [], prestecs: changedPrestecs }, rFC);
+}
+
+function oFCEdit(pid) {
+  const p = db.prestecs.find(x => x.id === pid); if (!p) return;
+  const a = gA(p.aId), pc = gP(p.pId);
+  document.getElementById('fce-id').value = pid;
+  document.getElementById('fce-info').innerHTML = '<strong>' + nC(a) + '</strong> · ' + pL(pc) + '<br><span style="color:var(--g500);font-size:.8rem">Entregat el ' + fD(p.dataE) + ' · ' + dias(p.dataE) + ' dies</span>';
+  document.getElementById('fce-dataE').value = p.dataE || today();
+  document.getElementById('fce-curs').value = p.curs || '';
+  document.getElementById('fce-obs').value = p.obs || '';
+  document.getElementById('mo-fc-edit').classList.add('open');
+}
+
+function sFCEdit() {
+  const id = document.getElementById('fce-id').value;
+  const p = db.prestecs.find(x => x.id === id); if (!p) return;
+  p.dataE = document.getElementById('fce-dataE').value;
+  p.curs  = document.getElementById('fce-curs').value.trim();
+  p.obs   = document.getElementById('fce-obs').value.trim();
+  sDB({ portatils: [], alumnes: [], prestecs: [p] }, () => { cM('mo-fc-edit'); rFC(); });
+}
+
+// ══════════════════════════════════════════════════════════════
+//  CORREUS
+// ══════════════════════════════════════════════════════════════
+
+let tplsData = { assumpte: '', plantilles: [] };
+let selTplId  = null;
+let corPreselAlu = null;
+
+function renderPH(txt, d) {
+  if (!txt) return '';
+  return txt
+    .replace(/\{\{nombreAlumno\}\}/gi,   d.nombreAlumno   || '')
+    .replace(/\{\{correoAlumno\}\}/gi,   d.correoAlumno   || '')
+    .replace(/\{\{nombreTutor\}\}/gi,    d.nombreTutor    || '')
+    .replace(/\{\{correoTutor\}\}/gi,    d.correoTutor    || '')
+    .replace(/\{\{Dadesportatils\}\}/gi, d.dadesPortatils || '');
+}
+
+function destLabel(dest) {
+  const d = (dest || '').toLowerCase();
+  if (d === 'alumnat' || d === 'alumne') return '👨‍🎓 Alumne/a';
+  if (d === 'coach'   || d === 'tutor')  return '👤 Tutor/a';
+  return '👥 Ambdós';
+}
+
+function syncDest(dest) {
+  const sel = document.getElementById('cor-dest');
+  if (!sel) return;
+  const d = (dest || '').toLowerCase();
+  if (d === 'alumnat' || d === 'alumne') sel.value = 'alumnat';
+  else if (d === 'coach' || d === 'tutor') sel.value = 'coach';
+  else sel.value = 'ambdós';
+}
+
+function buildDadesClientSide(aluId) {
+  const pr = db.prestecs.find(p => p.aId === aluId && p.estat === 'actiu');
+  const pc = pr ? gP(pr.pId) : null;
+  if (!pc) return '';
+  return '<ul>' +
+    '<li><b>Model:</b> '               + escH(pc.marca || '') + ' ' + escH(pc.model || '') + '</li>' +
+    '<li><b>Identificador (SACE):</b> ' + escH(pc.sace || '') + '</li>' +
+    '<li><b>Usuari:</b> '              + escH(pc.usr  || '') + '</li>' +
+    '<li><b>Password:</b> '            + escH(pc.pwd  || '') + '</li>' +
+    '</ul>';
+}
+
+function rCor() {
+  document.getElementById('cor-loading').style.display = 'block';
+  document.getElementById('cor-error').style.display   = 'none';
+  document.getElementById('cor-empty').style.display   = 'none';
+  document.getElementById('cor-main').style.display    = 'none';
+
+  google.script.run
+    .withSuccessHandler(function(raw) {
+      try { tplsData = JSON.parse(raw); } catch(e) { tplsData = { assumpte: '', plantilles: [] }; }
+      document.getElementById('cor-loading').style.display = 'none';
+      if (!tplsData.plantilles.length) { document.getElementById('cor-empty').style.display = 'block'; return; }
+      if (!selTplId || !tplsData.plantilles.find(t => t.id === selTplId)) {
+        selTplId = tplsData.plantilles[0].id;
+        syncDest(tplsData.plantilles[0].dest);
+      }
+      rTplList();
+      const sel = document.getElementById('cor-alu');
+      sel.innerHTML = '<option value="">— Selecciona alumne/a —</option>' +
+        db.alumnes.map(a => '<option value="' + a.id + '">' + nC(a) + (a.curs ? ' (' + a.curs + (a.grup ? ' ' + a.grup : '') + ')' : '') + '</option>').join('');
+      if (corPreselAlu) { sel.value = corPreselAlu; corPreselAlu = null; }
+      document.getElementById('cor-main').style.display = 'block';
+      rEP();
+    })
+    .withFailureHandler(function(err) {
+      document.getElementById('cor-loading').style.display = 'none';
+      document.getElementById('cor-err-msg').textContent = err.message || String(err);
+      document.getElementById('cor-error').style.display = 'block';
+    })
+    .loadPlantilles();
+}
+
+function rTplList() {
+  document.getElementById('tpl-list').innerHTML = tplsData.plantilles.map(t =>
+    '<div class="tc' + (t.id === selTplId ? ' sel' : '') + '" onclick="sTpl(\'' + escQ(t.id) + '\')">' +
+    '<h4>' + escH(t.id) + '</h4><p>' + destLabel(t.dest) + ' · per defecte</p></div>'
+  ).join('');
+}
+
+function sTpl(id) {
+  selTplId = id;
+  const tpl = tplsData.plantilles.find(t => t.id === id);
+  if (tpl) syncDest(tpl.dest);
+  rTplList(); rEP();
+}
+
+function rEP() {
+  const aluId = document.getElementById('cor-alu')?.value;
+  const dest  = document.getElementById('cor-dest')?.value || 'alumnat';
+  const infoEl = document.getElementById('cor-dest-info');
+  if (!selTplId || !aluId) {
+    document.getElementById('ep-sub').textContent = '—';
+    document.getElementById('ep-sub').className = 'ep-sub-val ep-empty';
+    document.getElementById('ep-view').innerHTML = '<span class="ep-empty">Selecciona una plantilla i un alumne/a per veure la previsualització.</span>';
+    infoEl.style.display = 'none'; return;
+  }
+  const tpl = tplsData.plantilles.find(t => t.id === selTplId);
+  const a   = gA(aluId);
+  if (!tpl || !a) return;
+  const dic = { nombreAlumno: a.nom || '', correoAlumno: a.email || '', nombreTutor: a.tnom || '', correoTutor: a.temail || '', dadesPortatils: buildDadesClientSide(aluId) };
+  const subRendered = renderPH(tplsData.assumpte || '', dic);
+  const cosRendered = renderPH(tpl.cos || '', dic);
+  const subEl = document.getElementById('ep-sub');
+  subEl.textContent = subRendered || '(sense assumpte)';
+  subEl.className   = 'ep-sub-val' + (!subRendered ? ' ep-empty' : '');
+  document.getElementById('ep-view').innerHTML = cosRendered || '<span class="ep-empty">El cos de la plantilla és buit.</span>';
+  const warnings = [], destLines = [], dNorm = dest.toLowerCase();
+  if (dNorm === 'alumnat' || dNorm === 'ambdós') { if (a.email) destLines.push('👨‍🎓 <strong>' + escH(nC(a)) + '</strong> &lt;' + escH(a.email) + '&gt;'); else warnings.push('⚠️ L\'alumne/a <strong>' + escH(nC(a)) + '</strong> no té correu electrònic definit.'); }
+  if (dNorm === 'coach' || dNorm === 'ambdós') { if (a.temail) destLines.push('👤 <strong>' + escH(a.tnom || 'Tutor/a') + '</strong> &lt;' + escH(a.temail) + '&gt;'); else warnings.push('⚠️ El tutor/a de <strong>' + escH(nC(a)) + '</strong> no té correu electrònic definit.'); }
+  let infoHtml = '';
+  if (destLines.length) infoHtml += '<div class="alert al-info" style="margin:0"><div><strong>S\'enviarà a:</strong><br>' + destLines.join('<br>') + '</div></div>';
+  if (warnings.length) infoHtml += '<div class="alert al-warn" style="margin:' + (destLines.length ? '8px 0 0' : '0') + '">' + warnings.map(w => '<div>' + w + '</div>').join('') + '</div>';
+  infoEl.innerHTML = infoHtml;
+  infoEl.style.display = infoHtml ? 'block' : 'none';
+}
+
+function enviarCorreu() {
+  const aluId = document.getElementById('cor-alu')?.value;
+  const dest  = document.getElementById('cor-dest')?.value;
+  if (!selTplId || !aluId) { alert('Selecciona una plantilla i un alumne/a abans d\'enviar.'); return; }
+  const btn = document.getElementById('btn-enviar');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Enviant...';
+  google.script.run
+    .withSuccessHandler(function(raw) {
+      btn.disabled = false; btn.innerHTML = '📨 Enviar ara';
+      try { const res = JSON.parse(raw); alert(res.ok ? '✅ ' + res.msg : '⚠️ ' + res.msg); } catch(e) { alert('✅ Correu enviat correctament.'); }
+    })
+    .withFailureHandler(function(err) {
+      btn.disabled = false; btn.innerHTML = '📨 Enviar ara';
+      alert('❌ Error en enviar el correu:\n' + (err.message || String(err)));
+    })
+    .enviarCorreuDirecte(selTplId, aluId, dest);
+}
+
+function copyEmail() {
+  const sub = document.getElementById('ep-sub')?.textContent;
+  const view = document.getElementById('ep-view');
+  if (!view || view.querySelector('.ep-empty')) return;
+  const txt = 'Assumpte: ' + (sub || '') + '\n\n' + (view.innerText || view.textContent);
+  navigator.clipboard.writeText(txt).then(() => alert('Text copiat!')).catch(() => alert('No s\'ha pogut copiar.'));
+}
+
+function goCorreu(pid) {
+  const p = db.prestecs.find(x => x.id === pid);
+  corPreselAlu = p ? p.aId : null;
+  document.querySelectorAll('.nl').forEach(x => x.classList.remove('active'));
+  document.querySelector('[data-s="correus"]').classList.add('active');
+  document.querySelectorAll('.sec').forEach(x => x.classList.remove('active'));
+  document.getElementById('sec-correus').classList.add('active');
+  document.getElementById('ttl').textContent = 'Correus';
+  rCor();
+}
+
+// ── MODALS GENERALS ─────────────────────────────
+function cM(id) { document.getElementById(id).classList.remove('open'); }
+
+function oMP(id) {
+  if (id) { const p = gP(id); document.getElementById('mp-ttl').textContent = 'Editar portàtil'; document.getElementById('mp-id').value = id; document.getElementById('mp-marca').value = p.marca || ''; document.getElementById('mp-model').value = p.model || ''; document.getElementById('mp-sace').value = p.sace || ''; document.getElementById('mp-estat').value = p.estat || 'disponible'; document.getElementById('mp-usr').value = p.usr || ''; document.getElementById('mp-pwd').value = p.pwd || ''; document.getElementById('mp-obs').value = p.obs || ''; }
+  else { document.getElementById('mp-ttl').textContent = 'Nou portàtil'; document.getElementById('mp-id').value = ''; ['mp-marca', 'mp-model', 'mp-sace', 'mp-usr', 'mp-pwd', 'mp-obs'].forEach(f => document.getElementById(f).value = ''); document.getElementById('mp-estat').value = 'disponible'; }
+  document.getElementById('mo-p').classList.add('open');
+}
+
+function sP() {
+  const marca = document.getElementById('mp-marca').value.trim(), model = document.getElementById('mp-model').value.trim(), sace = document.getElementById('mp-sace').value.trim();
+  if (!marca || !model || !sace) { alert('Marca, Model i SACE són obligatoris.'); return; }
+  const id = document.getElementById('mp-id').value;
+  const d = { marca, model, sace, estat: document.getElementById('mp-estat').value, usr: document.getElementById('mp-usr').value.trim(), pwd: document.getElementById('mp-pwd').value.trim(), obs: document.getElementById('mp-obs').value.trim() };
+  let recP;
+  if (id) { const i = db.portatils.findIndex(p => p.id === id); db.portatils[i] = { ...db.portatils[i], ...d }; recP = db.portatils[i]; }
+  else { recP = { id: uid(), ...d }; db.portatils.push(recP); }
+  sDB({ portatils: [recP], alumnes: [], prestecs: [] }, () => { cM('mo-p'); rInv(); rDash(); });
+}
+
+function oMA(id) {
+  if (id) { const a = gA(id); document.getElementById('ma-ttl').textContent = 'Editar alumne/a'; document.getElementById('ma-id').value = id; document.getElementById('ma-nom').value = a.nom || ''; document.getElementById('ma-cog').value = a.cog || ''; document.getElementById('ma-curs').value = a.curs || ''; document.getElementById('ma-grup').value = a.grup || ''; document.getElementById('ma-email').value = a.email || ''; document.getElementById('ma-tnom').value = a.tnom || ''; document.getElementById('ma-temail').value = a.temail || ''; }
+  else { document.getElementById('ma-ttl').textContent = 'Nou alumne/a'; document.getElementById('ma-id').value = ''; ['ma-nom', 'ma-cog', 'ma-curs', 'ma-grup', 'ma-email', 'ma-tnom', 'ma-temail'].forEach(f => document.getElementById(f).value = ''); }
+  document.getElementById('mo-a').classList.add('open');
+}
+
+function sA() {
+  const nom = document.getElementById('ma-nom').value.trim(), cog = document.getElementById('ma-cog').value.trim();
+  if (!nom || !cog) { alert('Nom i cognoms són obligatoris.'); return; }
+  const id = document.getElementById('ma-id').value;
+  const d = { nom, cog, curs: document.getElementById('ma-curs').value.trim(), grup: document.getElementById('ma-grup').value.trim(), email: document.getElementById('ma-email').value.trim(), tnom: document.getElementById('ma-tnom').value.trim(), temail: document.getElementById('ma-temail').value.trim() };
+  let recA;
+  if (id) { const i = db.alumnes.findIndex(a => a.id === id); db.alumnes[i] = { ...db.alumnes[i], ...d }; recA = db.alumnes[i]; }
+  else { recA = { id: uid(), ...d }; db.alumnes.push(recA); }
+  sDB({ portatils: [], alumnes: [recA], prestecs: [] }, () => { cM('mo-a'); rAlu(); });
+}
+
+function oPres() {
+  const sa = document.getElementById('pr-alu'), sp = document.getElementById('pr-pc');
+  sa.innerHTML = '<option value="">— Selecciona alumne/a —</option>' + db.alumnes.map(a => '<option value="' + a.id + '">' + nC(a) + ' (' + (a.curs || '') + (a.grup ? ' ' + a.grup : '') + ')').join('</option>') + '</option>';
+  const disp = db.portatils.filter(p => p.estat === 'disponible');
+  sp.innerHTML = '<option value="">— Selecciona portàtil —</option>' + disp.map(p => '<option value="' + p.id + '">' + pL(p) + '</option>').join('');
+  document.getElementById('pr-data').value = today();
+  document.getElementById('pr-curs').value = new Date().getFullYear() + '-' + (new Date().getFullYear() + 1);
+  document.getElementById('pr-obs').value = '';
+  document.getElementById('mo-pr').classList.add('open');
+}
+function oPresP(pid) { oPres(); document.getElementById('pr-pc').value = pid; }
+
+function sPr() {
+  const aId = document.getElementById('pr-alu').value, pId = document.getElementById('pr-pc').value, dataE = document.getElementById('pr-data').value;
+  if (!aId || !pId || !dataE) { alert('Alumne/a, portàtil i data són obligatoris.'); return; }
+  const nouPrestec = { id: uid(), aId, pId, dataE, dataD: '', curs: document.getElementById('pr-curs').value.trim(), obs: document.getElementById('pr-obs').value.trim(), obsD: '', estat: 'actiu' };
+  db.prestecs.push(nouPrestec);
+  const pcPr = gP(pId); if (pcPr) pcPr.estat = 'assignat';
+  sDB({ portatils: pcPr ? [pcPr] : [], alumnes: [], prestecs: [nouPrestec] }, () => { cM('mo-pr'); rSec(curSec()); rDash(); });
+}
+
+function oD(pid) {
+  const p = db.prestecs.find(x => x.id === pid); if (!p) return;
+  const a = gA(p.aId), pc = gP(p.pId);
+  document.getElementById('dv-id').value = pid;
+  document.getElementById('dv-info').innerHTML = '<strong>' + nC(a) + '</strong> · ' + pL(pc) + '<br><span style="color:var(--g500);font-size:.8rem">Entregat el ' + fD(p.dataE) + ' · ' + dias(p.dataE) + ' dies</span>';
+  document.getElementById('dv-data').value = today();
+  document.getElementById('dv-estat').value = 'disponible';
+  document.getElementById('dv-obs').value = '';
+  document.getElementById('mo-d').classList.add('open');
+}
+
+function sDv() {
+  const dvId = document.getElementById('dv-id').value; const pDv = db.prestecs.find(x => x.id === dvId); if (!pDv) return;
+  pDv.estat = 'tancat'; pDv.dataD = document.getElementById('dv-data').value; pDv.obsD = document.getElementById('dv-obs').value.trim();
+  const pcDv = gP(pDv.pId); if (pcDv) pcDv.estat = document.getElementById('dv-estat').value;
+  sDB({ portatils: pcDv ? [pcDv] : [], alumnes: [], prestecs: [pDv] }, () => { cM('mo-d'); rSec(curSec()); rDash(); });
+}
+
+// ═══════════════════════════════════════════════
+// ── IMPORTACIÓ CSV ──────────────────────────────
+// ═══════════════════════════════════════════════
+const IMP_FIELDS = {
+  alumnes: [
+    { key: 'nom',    label: 'Nom',              req: true  },
+    { key: 'cog',    label: 'Cognoms',           req: true  },
+    { key: 'curs',   label: 'Curs',              req: false },
+    { key: 'grup',   label: 'Grup',              req: false },
+    { key: 'email',  label: 'Correu electrònic', req: false },
+    { key: 'tnom',   label: 'Nom tutor/a',       req: false },
+    { key: 'temail', label: 'Correu tutor/a',    req: false }
+  ],
+  portatils: [
+    { key: 'marca',  label: 'Marca',             req: true  },
+    { key: 'model',  label: 'Model',             req: true  },
+    { key: 'sace',   label: 'SACE',               req: true  },
+    { key: 'estat',  label: 'Estat',             req: false },
+    { key: 'usr',    label: 'Usuari',            req: false },
+    { key: 'pwd',    label: 'Contrasenya',       req: false },
+    { key: 'obs',    label: 'Observacions',      req: false }
+  ]
+};
+
+const IMP_AUTO = {
+  nom:    h => /^nom$/i.test(h)   || /^nombre$/i.test(h) || /^name$/i.test(h),
+  cog:    h => /cognom/i.test(h)  || /apellido/i.test(h) || /surname/i.test(h),
+  curs:   h => /^curs$/i.test(h)  || /^curso$/i.test(h)  || /^year$/i.test(h),
+  grup:   h => /^grup$/i.test(h)  || /^grupo$/i.test(h)  || /^group$/i.test(h) || /^clase$/i.test(h) || /^classe$/i.test(h),
+  email:  h => /^(email|correu|mail)$/i.test(h) && !/tutor/i.test(h),
+  tnom:   h => /tutor/i.test(h)   && /nom/i.test(h),
+  temail: h => /tutor/i.test(h)   && (/email/i.test(h) || /correu/i.test(h) || /mail/i.test(h)),
+  marca:  h => /^marca$/i.test(h) || /^brand$/i.test(h),
+  model:  h => /^model$/i.test(h),
+  sace:   h => /serie/i.test(h) || /serial/i.test(h) || /^sn$/i.test(h) || /intern/i.test(h) || /^sace$/i.test(h) || /identif/i.test(h),
+  estat:  h => /^estat$/i.test(h) || /^estado$/i.test(h) || /^status$/i.test(h),
+  usr:    h => /^usr/i.test(h)    || /^usuari/i.test(h)  || /^usuario$/i.test(h) || /^user$/i.test(h),
+  pwd:    h => /^pwd$/i.test(h)   || /^pass/i.test(h)    || /contras/i.test(h)   || /credenc/i.test(h),
+  obs:    h => /^obs/i.test(h)    || /^nota/i.test(h)    || /^note/i.test(h)
+};
+
+let imp = { tipus: 'alumnes', headers: [], rows: [], step: 1, mapping: {} };
+
+function setTipus(t) {
+  imp.tipus = t;
+  document.getElementById('pill-alumnes').classList.toggle('act', t === 'alumnes');
+  document.getElementById('pill-portatils').classList.toggle('act', t === 'portatils');
+  rImpHint();
+}
+
+function rImpHint() {
+  const fields = IMP_FIELDS[imp.tipus];
+  const req = fields.filter(f => f.req).map(f => '<strong>' + f.label + '</strong>');
+  const opt = fields.filter(f => !f.req).map(f => f.label);
+  document.getElementById('imp-hint').innerHTML =
+    '<strong>Camps obligatoris:</strong> ' + req.join(', ') +
+    '<br><strong>Camps opcionals:</strong> ' + opt.join(', ') +
+    '<br><span style="color:var(--g500)">La primera fila del CSV ha de ser la capçalera. Pots usar comes o punt i coma com a separador.</span>';
+}
+
+function oImport(tipus) {
+  imp = { tipus: tipus || 'alumnes', headers: [], rows: [], step: 1, mapping: {} };
+  document.getElementById('pill-alumnes').classList.toggle('act', imp.tipus === 'alumnes');
+  document.getElementById('pill-portatils').classList.toggle('act', imp.tipus === 'portatils');
+  document.getElementById('imp-file').value = '';
+  document.getElementById('imp-chip-wrap').innerHTML = '';
+  goStep(1); rImpHint();
+  document.getElementById('mo-imp').classList.add('open');
+}
+
+function impDrop(e) {
+  e.preventDefault(); document.getElementById('drop-z').classList.remove('drag');
+  const f = e.dataTransfer.files[0]; if (!f) return; readImpFile(f);
+}
+function impLoad() { const f = document.getElementById('imp-file').files[0]; if (!f) return; readImpFile(f); }
+function readImpFile(f) {
+  const r = new FileReader();
+  r.onload = e => {
+    const parsed = parseCSV(e.target.result);
+    imp.headers = parsed.headers; imp.rows = parsed.rows;
+    document.getElementById('imp-chip-wrap').innerHTML = parsed.rows.length
+      ? '<div class="imp-chip">📄 ' + f.name + ' · <strong>' + parsed.rows.length + ' files</strong> · ' + parsed.headers.length + ' columnes</div>'
+      : '<div class="imp-chip" style="background:#fef2f2;border-color:#fca5a5;color:#dc2626">⚠️ No s\'han trobat dades al fitxer</div>';
+    document.getElementById('imp-btn-next').disabled = parsed.rows.length === 0;
+  };
+  r.readAsText(f, 'UTF-8');
+}
+
+function parseCSV(txt) {
+  const sep = txt.indexOf(';') > -1 && txt.indexOf(',') === -1 ? ';' : ',';
+  const lines = txt.trim().split(/\r?\n/);
+  if (!lines.length) return { headers: [], rows: [] };
+  function pLine(l) {
+    const res = []; let cur = '', q = false;
+    for (let i = 0; i < l.length; i++) { const c = l[i]; if (c === '"') { if (q && l[i + 1] === '"') { cur += '"'; i++; } else q = !q; } else if (c === sep && !q) { res.push(cur.trim()); cur = ''; } else cur += c; }
+    res.push(cur.trim()); return res;
+  }
+  const headers = pLine(lines[0]).map(h => h.replace(/^"|"$/g, '').trim());
+  const rows = lines.slice(1).filter(l => l.trim()).map(l => {
+    const vals = pLine(l); const obj = {};
+    headers.forEach((h, i) => obj[h] = (vals[i] || '').replace(/^"|"$/g, '').trim());
+    return obj;
+  });
+  return { headers, rows };
+}
+
+function autoMap(headers, tipus) {
+  const m = {};
+  IMP_FIELDS[tipus].forEach(f => { const h = headers.find(h => IMP_AUTO[f.key] && IMP_AUTO[f.key](h)); m[f.key] = h || ''; });
+  return m;
+}
+
+function goStep(n) {
+  imp.step = n;
+  [1, 2, 3].forEach(i => {
+    const s = document.getElementById('st-' + i), d = document.getElementById('imp-s' + i);
+    s.className = 'step' + (i === n ? ' act' : i < n ? ' done' : '');
+    d.style.display = i === n ? '' : 'none';
+  });
+  document.getElementById('imp-btn-next').style.display = n < 3 ? '' : 'none';
+  document.getElementById('imp-btn-conf').style.display = n === 3 ? '' : 'none';
+  document.getElementById('imp-btn-back').style.display = n > 1 ? '' : 'none';
+  document.getElementById('imp-btn-next').disabled = n === 1 && !imp.rows.length;
+}
+
+function impNext() {
+  if (imp.step === 1) { if (!imp.rows.length) return; imp.mapping = autoMap(imp.headers, imp.tipus); rImpMap(); goStep(2); }
+  else if (imp.step === 2) { IMP_FIELDS[imp.tipus].forEach(f => { const el = document.getElementById('ms-' + f.key); if (el) imp.mapping[f.key] = el.value; }); rImpPreview(); goStep(3); }
+}
+function impBack() { if (imp.step === 2) goStep(1); else if (imp.step === 3) goStep(2); }
+
+function rImpMap() {
+  const fields = IMP_FIELDS[imp.tipus];
+  const opts = fields.map(f => {
+    const selVal = imp.mapping[f.key] || '';
+    let o = '<option value="">— No importar —</option>';
+    imp.headers.forEach(h => { o += '<option value="' + h + '"' + (h === selVal ? ' selected' : '') + '>' + h + '</option>'; });
+    return '<div class="map-row"><div class="map-lbl">' + (f.req ? '<strong>' : '') + '→ ' + f.label + (f.req ? '<span class="map-req">*</span></strong>' : '') + '</div><select class="sel" id="ms-' + f.key + '" style="font-size:.82rem;padding:6px 9px" onchange="imp.mapping[\'' + f.key + '\']=this.value">' + o + '</select></div>';
+  });
+  document.getElementById('imp-map').innerHTML = '<div>' + opts.join('') + '</div>';
+}
+
+function rImpPreview() {
+  const fields = IMP_FIELDS[imp.tipus];
+  const mapped = fields.filter(f => imp.mapping[f.key]);
+  const req = fields.filter(f => f.req);
+  let valid = 0, skip = 0;
+  imp.rows.forEach(r => { const miss = req.some(f => !imp.mapping[f.key] || !r[imp.mapping[f.key]]); miss ? skip++ : valid++; });
+  const tipusLabel = imp.tipus === 'alumnes' ? 'alumnes' : 'portàtils';
+  document.getElementById('imp-sum-alert').innerHTML = 'S\'importaran <strong>' + valid + ' ' + tipusLabel + '</strong> nous a la base de dades.' + (skip ? ' <span style="color:var(--warn)">(' + skip + ' files ignorades per manca de camps obligatoris)</span>' : '');
+  let th = mapped.map(f => '<th>' + f.label + '</th>').join('');
+  let tb = (imp.rows.slice(0, 5)).map(r => '<tr>' + mapped.map(f => '<td>' + (r[imp.mapping[f.key]] || '<span style="color:var(--g400)">—</span>') + '</td>').join('') + '</tr>').join('');
+  document.getElementById('imp-prev').innerHTML = '<table><thead><tr>' + th + '</tr></thead><tbody>' + tb + '</tbody></table>';
+  document.getElementById('imp-skip-info').textContent = 'Mostrant les primeres ' + Math.min(5, imp.rows.length) + ' de ' + imp.rows.length + ' files del CSV.';
+}
+
+function impConfirm() {
+  const fields = IMP_FIELDS[imp.tipus];
+  const req = fields.filter(f => f.req);
+  let imported = 0, skip = 0;
+  imp.rows.forEach(row => {
+    const miss = req.some(f => !imp.mapping[f.key] || !row[imp.mapping[f.key]]);
+    if (miss) { skip++; return; }
+    const rec = { id: uid() };
+    fields.forEach(f => { if (imp.mapping[f.key]) rec[f.key] = (row[imp.mapping[f.key]] || '').trim(); });
+    if (imp.tipus === 'alumnes') db.alumnes.push(rec);
+    else { if (!rec.estat) rec.estat = 'disponible'; db.portatils.push(rec); }
+    imported++;
+  });
+  sDB(() => {
+    cM('mo-imp');
+    setTimeout(() => {
+      alert('✅ ' + imported + ' registres importats correctament.' + (skip ? '\n⚠️ ' + skip + ' files omeses per manca de dades obligatòries.' : ''));
+      if (imp.tipus === 'alumnes') document.querySelector('[data-s="alumnes"]').click();
+      else document.querySelector('[data-s="inventari"]').click();
+    }, 100);
+  });
+}
+
+// ── EXPORT CSV ──────────────────────────────────
+function exportCSV() {
+  const rows = [['ID', 'Alumne/a', 'Curs', 'Grup', 'Portàtil', 'NumSerie', 'DataEntrega', 'DataDevolucio', 'CursAcademic', 'Estat']];
+  db.prestecs.forEach(p => { const a = gA(p.aId), pc = gP(p.pId); rows.push([p.id, nC(a), a?.curs || '', a?.grup || '', pc ? pc.marca + ' ' + pc.model : '', pc?.sace || '', p.dataE || '', p.dataD || '', p.curs || '', p.estat]); });
+  const csv = rows.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\n');
+  const el = document.createElement('a');
+  el.href = URL.createObjectURL(new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' }));
+  el.download = 'prestec_portatils_' + today() + '.csv';
+  el.click();
+}
+
+// ── INIT ────────────────────────────────────────
+lDB(function() {
+  rDash();
+  document.querySelectorAll('.mo').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); }));
+});
+</script>
+</body>
+</html>
