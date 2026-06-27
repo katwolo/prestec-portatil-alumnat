@@ -1241,17 +1241,7 @@ function enviarAccCondicions() {
       btn.disabled = false;
       btn.innerHTML = '📨 Enviar AcceptarCondicions';
       alert(res.msg || (res.ok ? '✅ Fet!' : '❌ Error'));
-      if (res.ok) {
-        var now = new Date();
-        var pad = function(n) { return String(n).padStart(2, '0'); };
-        var nowStr = pad(now.getDate()) + '/' + pad(now.getMonth() + 1) + '/' + now.getFullYear() + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
-        alumnes.forEach(function(a) { a.mailEnviat = nowStr; });
-      }
-      document.querySelectorAll('.pet-chk').forEach(function(c) { c.checked = false; });
-      var allChk = document.getElementById('pet-chk-all');
-      if (allChk) allChk.checked = false;
-      petUpdSel();
-      applyPetFilter();
+      rPet();
     })
     .withFailureHandler(function(err) {
       btn.disabled = false;
