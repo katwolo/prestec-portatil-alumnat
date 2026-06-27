@@ -1154,7 +1154,7 @@ function rPetTable(data) {
   document.getElementById('pet-t').innerHTML =
     '<table><thead><tr>' +
     '<th style="width:36px"><input type="checkbox" id="pet-chk-all" onchange="petSelAll(this)"></th>' +
-    '<th>Data</th><th>Alumne/a</th><th>Curs / Classe</th><th>Correu</th><th>Coach</th><th>Prioritat</th>' +
+    '<th>Data</th><th>Alumne/a</th><th>Curs / Classe</th><th>Correu</th><th>Coach</th><th>Prioritat</th><th>Enviament</th>' +
     '</tr></thead><tbody id="pet-tbody"></tbody></table>';
   applyPetFilter();
 }
@@ -1170,7 +1170,7 @@ function applyPetFilter() {
   var allChk = document.getElementById('pet-chk-all');
   if (!tbody) return;
   if (!filtered.length) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:22px;color:var(--g400)">Cap resultat per als filtres actuals.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:22px;color:var(--g400)">Cap resultat per als filtres actuals.</td></tr>';
     if (allChk) allChk.checked = false;
     petUpdSel();
     return;
@@ -1183,7 +1183,10 @@ function applyPetFilter() {
   var rows = '';
   filtered.forEach(function(d) {
     var origIdx = petData.indexOf(d);
-    rows += '<tr>' +
+    var sentBadge = d.mailEnviat
+      ? '<span class="badge b-ok" style="font-size:.7rem;gap:3px">✉️ ' + escH(d.mailEnviat) + '</span>'
+      : '<span style="color:var(--g300);font-size:1rem;line-height:1">—</span>';
+    rows += '<tr' + (d.mailEnviat ? ' style="background:#f0fdf4"' : '') + '>' +
       '<td style="text-align:center"><input type="checkbox" class="pet-chk" data-idx="' + origIdx + '" onchange="petUpdSel()"></td>' +
       '<td style="font-size:.78rem;color:var(--g400)">' + escH(d.timestamp) + '</td>' +
       '<td><strong>' + escH(d.nom) + ' ' + escH(d.cognoms) + '</strong></td>' +
@@ -1191,6 +1194,7 @@ function applyPetFilter() {
       '<td><a href="mailto:' + escH(d.emailAlum) + '" style="color:var(--pri);font-size:.82rem">' + escH(d.emailAlum) + '</a></td>' +
       '<td style="font-size:.82rem">' + escH(d.coach) + (d.emailCoach ? '<br><span style="color:var(--g400);font-size:.75rem">' + escH(d.emailCoach) + '</span>' : '') + '</td>' +
       '<td>' + prefBadge(d.preferencia) + '</td>' +
+      '<td>' + sentBadge + '</td>' +
       '</tr>';
   });
   tbody.innerHTML = rows;
@@ -1237,10 +1241,17 @@ function enviarAccCondicions() {
       btn.disabled = false;
       btn.innerHTML = '📨 Enviar AcceptarCondicions';
       alert(res.msg || (res.ok ? '✅ Fet!' : '❌ Error'));
+      if (res.ok) {
+        var now = new Date();
+        var pad = function(n) { return String(n).padStart(2, '0'); };
+        var nowStr = pad(now.getDate()) + '/' + pad(now.getMonth() + 1) + '/' + now.getFullYear() + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+        alumnes.forEach(function(a) { a.mailEnviat = nowStr; });
+      }
       document.querySelectorAll('.pet-chk').forEach(function(c) { c.checked = false; });
       var allChk = document.getElementById('pet-chk-all');
       if (allChk) allChk.checked = false;
       petUpdSel();
+      applyPetFilter();
     })
     .withFailureHandler(function(err) {
       btn.disabled = false;

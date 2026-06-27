@@ -459,23 +459,25 @@ function loadPeticions() {
     if (!sh) return JSON.stringify({ ok: false, msg: 'No s\'ha trobat la pestanya "Petició inicial".' });
     var lastRow = sh.getLastRow();
     if (lastRow < 2) return JSON.stringify({ ok: true, data: [] });
-    var data = sh.getRange(2, 1, lastRow - 1, 9).getValues();
+    var allRows = sh.getRange(2, 1, lastRow - 1, 10).getValues();
     var tz = Session.getScriptTimeZone();
-    var result = data
-      .filter(function(r) { return r[1] || r[2]; })
-      .map(function(r) {
-        return {
-          timestamp:   r[0] ? Utilities.formatDate(new Date(r[0]), tz, 'dd/MM/yyyy HH:mm') : '',
-          nom:         String(r[1] || ''),
-          cognoms:     String(r[2] || ''),
-          curs:        String(r[3] || ''),
-          classe:      String(r[4] || ''),
-          emailAlum:   String(r[5] || ''),
-          coach:       String(r[6] || ''),
-          emailCoach:  String(r[7] || ''),
-          preferencia: String(r[8] || '')
-        };
+    var result = [];
+    allRows.forEach(function(r, idx) {
+      if (!r[1] && !r[2]) return;
+      result.push({
+        timestamp:   r[0] instanceof Date ? Utilities.formatDate(r[0], tz, 'dd/MM/yyyy HH:mm') : String(r[0] || ''),
+        nom:         String(r[1] || ''),
+        cognoms:     String(r[2] || ''),
+        curs:        String(r[3] || ''),
+        classe:      String(r[4] || ''),
+        emailAlum:   String(r[5] || ''),
+        coach:       String(r[6] || ''),
+        emailCoach:  String(r[7] || ''),
+        preferencia: String(r[8] || ''),
+        mailEnviat:  r[9] instanceof Date ? Utilities.formatDate(r[9], tz, 'dd/MM/yyyy HH:mm') : String(r[9] || ''),
+        rowNum:      idx + 2
       });
+    });
     return JSON.stringify({ ok: true, data: result });
   } catch(e) {
     return JSON.stringify({ ok: false, msg: e.message });
@@ -559,6 +561,9 @@ function enviarAcceptarCondicionsLot(alumnesJson) {
     var assumpte = tplData.assumpte || 'Préstec portàtil';
     var enviats = 0, errorsLlista = [];
 
+    var ssPet = null, shPet = null;
+    try { ssPet = SpreadsheetApp.openById(ID_PETICIONS); shPet = ssPet.getSheetByName('Petició inicial'); } catch(ex) {}
+
     alumnes.forEach(function(a) {
       var urlRegistre = URL_REGISTRE_WEBAPP
         ? URL_REGISTRE_WEBAPP +
@@ -583,6 +588,7 @@ function enviarAcceptarCondicionsLot(alumnesJson) {
       try {
         GmailApp.sendEmail(a.emailAlum, assumpFi, '', { htmlBody: cos, name: 'Departament AFD' });
         registrarEnviament_(a.emailAlum, assumpFi);
+        if (shPet && a.rowNum) shPet.getRange(a.rowNum, 10).setValue(new Date());
         enviats++;
       } catch(e) {
         errorsLlista.push(a.nom + ' ' + a.cognoms + ': ' + e.message);
