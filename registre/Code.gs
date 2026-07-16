@@ -6,23 +6,38 @@ var ID_DOCUMENT_CONDICIONS = "1jO1_Oh9lK_vKXR4l4Shh2ZD2-P-wVbfGF2pS1xUGbw8"; // 
 var ID_GESTOR = "15b0FVkvr7eVeeyjokrk2ely9sQmwLHyBZaQwqKEOtVM";             // 🔴 ID del Gestor de Préstec
 
 // ──────────────────────────────────────────────────────────────
-//  Web App
+//  API per a GitHub Pages — respon JSONP (GET + ?callback=...)
+//  Desplegament GAS: "Execute as: Me · Who has access: Anyone"
 // ──────────────────────────────────────────────────────────────
 
 function doGet(e) {
-  var p = (e && e.parameter) ? e.parameter : {};
-  var template = HtmlService.createTemplateFromFile('Index');
-  template.idDocument   = ID_DOCUMENT_CONDICIONS;
-  template.preNom       = p.nombre      || '';
-  template.preCognoms   = p.apellidos   || '';
-  template.preCurs      = p.curso       || '';
-  template.preClasse    = p.clase       || '';
-  template.preEmail     = p.emailAlumno || '';
-  template.preCoach     = p.coach       || '';
-  template.preEmailCoach = p.emailCoach || '';
-  return template.evaluate()
-    .setTitle('Registre de Préstec de Portàtils')
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  var p  = e && e.parameter ? e.parameter : {};
+  var cb = p.callback || '';
+  var result;
+
+  if (p.action === 'textCondicions') {
+    try {
+      var text = textCondicionsDoc(ID_DOCUMENT_CONDICIONS);
+      result = { ok: true, text: text };
+    } catch (ex) {
+      result = { ok: false, msg: ex.message };
+    }
+  } else if (p.action === 'guardar') {
+    try {
+      var datos = JSON.parse(p.data || '{}');
+      var msg = guardarRegistro(datos);
+      result = { ok: true, msg: msg };
+    } catch (ex) {
+      result = { ok: false, msg: ex.message };
+    }
+  } else {
+    result = { ok: false, msg: 'Acció no reconeguda.' };
+  }
+
+  var json = JSON.stringify(result);
+  return ContentService
+    .createTextOutput(cb ? cb + '(' + json + ');' : json)
+    .setMimeType(cb ? ContentService.MimeType.JAVASCRIPT : ContentService.MimeType.JSON);
 }
 
 function textCondicionsDoc(id) {
@@ -47,7 +62,7 @@ function guardarRegistro(datos) {
     datos.coach,       // G: Nom Coach
     datos.emailCoach   // H: Email Coach
   ]);
-  try { sincronitzarRegistre(); } catch(e) { Logger.log('Sync error: ' + e.message); }
+  try { sincronitzarRegistre_(); } catch(e) { Logger.log('Sync error: ' + e.message); }
   return "Sol·licitud registrada correctament. Les condicions de l'Institut de l'Esport de Barcelona han estat acceptades.";
 }
 
@@ -102,66 +117,52 @@ function generateUniqueId_(shAlumnes) {
 
 function sincronitzarRegistre() {
   var ui = SpreadsheetApp.getUi();
-
   try {
-    var ssRegistre = SpreadsheetApp.getActiveSpreadsheet();
-    var shRegistre = ssRegistre.getSheetByName('Full 1');
-
-    if (!shRegistre) {
-      ui.alert('⚠️ Error', 'No s\'ha trobat la pestanya "Full 1".', ui.ButtonSet.OK);
-      return;
-    }
-
-    var ssGestor  = SpreadsheetApp.openById(ID_GESTOR);
-    var shAlumnes = ssGestor.getSheetByName('alumnes');
-
-    if (!shAlumnes) {
-      ui.alert('⚠️ Error', 'No s\'ha trobat la pestanya "alumnes" al Gestor.', ui.ButtonSet.OK);
-      return;
-    }
-
-    var lastRow = shRegistre.getLastRow();
-    if (lastRow < 2) {
-      ui.alert('ℹ️ Sense dades', 'No hi ha dades al full de registre.', ui.ButtonSet.OK);
-      return;
-    }
-
-    var data = shRegistre.getRange(2, 1, lastRow - 1, 9).getValues();
-    // A=0: Timestamp | B=1: Nom | C=2: Cognoms | D=3: Curs
-    // E=4: Classe    | F=5: Email Alum | G=6: Coach | H=7: Mail coach | I=8: ✅ Copiat
-
-    var copiats = 0;
-
-    for (var i = 0; i < data.length; i++) {
-      var row = data[i];
-
-      if (!row[1] && !row[2]) continue; // fila buida
-      if (row[8] === '✅')    continue; // ja copiada
-
-      var nouId = generateUniqueId_(shAlumnes);
-
-      shAlumnes.appendRow([
-        nouId,        // A — id
-        row[1] || '', // B — nom
-        row[2] || '', // C — cog
-        row[3] || '', // D — curs
-        row[4] || '', // E — grup
-        row[5] || '', // F — email
-        row[6] || '', // G — tnom (Coach)
-        row[7] || ''  // H — temail (Mail coach)
-      ]);
-
-      shRegistre.getRange(i + 2, 9).setValue('✅');
-      copiats++;
-    }
-
-    var msg = copiats > 0
-      ? '✅ ' + copiats + ' alumne' + (copiats !== 1 ? 's' : '') + ' nou' + (copiats !== 1 ? 's' : '') + ' afegit' + (copiats !== 1 ? 's' : '') + ' correctament.'
-      : 'ℹ️ No hi ha registres nous per sincronitzar.';
-
+    var msg = sincronitzarRegistre_();
     ui.alert('Sincronització completada', msg, ui.ButtonSet.OK);
-
   } catch(e) {
     ui.alert('❌ Error', 'S\'ha produït un error durant la sincronització:\n' + e.message, ui.ButtonSet.OK);
   }
+}
+
+function sincronitzarRegistre_() {
+  var ssRegistre = SpreadsheetApp.getActiveSpreadsheet();
+  var shRegistre = ssRegistre.getSheetByName('Full 1');
+  if (!shRegistre) throw new Error('No s\'ha trobat la pestanya "Full 1".');
+
+  var ssGestor  = SpreadsheetApp.openById(ID_GESTOR);
+  var shAlumnes = ssGestor.getSheetByName('alumnes');
+  if (!shAlumnes) throw new Error('No s\'ha trobat la pestanya "alumnes" al Gestor.');
+
+  var lastRow = shRegistre.getLastRow();
+  if (lastRow < 2) return 'ℹ️ No hi ha dades al full de registre.';
+
+  var data = shRegistre.getRange(2, 1, lastRow - 1, 9).getValues();
+  // A=0: Timestamp | B=1: Nom | C=2: Cognoms | D=3: Curs
+  // E=4: Classe    | F=5: Email Alum | G=6: Coach | H=7: Mail coach | I=8: ✅ Copiat
+
+  var copiats = 0;
+  for (var i = 0; i < data.length; i++) {
+    var row = data[i];
+    if (!row[1] && !row[2]) continue;
+    if (row[8] === '✅')    continue;
+
+    var nouId = generateUniqueId_(shAlumnes);
+    shAlumnes.appendRow([
+      nouId,        // A — id
+      row[1] || '', // B — nom
+      row[2] || '', // C — cog
+      row[3] || '', // D — curs
+      row[4] || '', // E — grup
+      row[5] || '', // F — email
+      row[6] || '', // G — tnom (Coach)
+      row[7] || ''  // H — temail (Mail coach)
+    ]);
+    shRegistre.getRange(i + 2, 9).setValue('✅');
+    copiats++;
+  }
+
+  return copiats > 0
+    ? '✅ ' + copiats + ' alumne' + (copiats !== 1 ? 's' : '') + ' nou' + (copiats !== 1 ? 's' : '') + ' afegit' + (copiats !== 1 ? 's' : '') + ' correctament.'
+    : 'ℹ️ No hi ha registres nous per sincronitzar.';
 }

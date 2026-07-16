@@ -1,12 +1,28 @@
-function doGet() {
-  var idDocument = "1jO1_Oh9lK_vKXR4l4Shh2ZD2-P-wVbfGF2pS1xUGbw8"; // <--- ENGANXA AQUÍ L'ID DEL TEU GOOGLE DOC
+// ─────────────────────────────────────────────────────────────
+//  API per a GitHub Pages — respon JSONP (GET + ?callback=...)
+//  Desplegament GAS: "Execute as: Me · Who has access: Anyone"
+// ─────────────────────────────────────────────────────────────
+function doGet(e) {
+  var p  = e && e.parameter ? e.parameter : {};
+  var cb = p.callback || '';
+  var result;
 
-  var template = HtmlService.createTemplateFromFile('Index');
-  template.idDocument = idDocument;
+  if (p.action === 'guardar') {
+    try {
+      var dades = JSON.parse(p.data || '{}');
+      var msg = guardarRegistre(dades);
+      result = { ok: true, msg: msg };
+    } catch (ex) {
+      result = { ok: false, msg: ex.message };
+    }
+  } else {
+    result = { ok: false, msg: 'Acció no reconeguda.' };
+  }
 
-  return template.evaluate()
-      .setTitle('Petició de Préstec de Portàtils')
-      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  var json = JSON.stringify(result);
+  return ContentService
+    .createTextOutput(cb ? cb + '(' + json + ');' : json)
+    .setMimeType(cb ? ContentService.MimeType.JAVASCRIPT : ContentService.MimeType.JSON);
 }
 
 function textCondicionsDoc(id) {
