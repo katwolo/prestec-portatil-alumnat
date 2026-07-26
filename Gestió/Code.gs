@@ -13,7 +13,7 @@ var HEADERS = {
 
 var ID_PETICIONS = "1Pm06Uu3Y350NTZqNuWs4g6e6r4Zqaq5zQAOyrbD8lzU";
 var ID_REGISTRE  = "1bAYP40kOYT7C006R3bUuWuIxtGg79XeOr55DvJ5t_eo";
-var URL_REGISTRE_WEBAPP = ""; // 🔴 Enganxa aquí la URL de desplegament del formulari de Registre
+var URL_REGISTRE_WEBAPP = "https://katwolo.github.io/prestec-portatil-alumnat/registre/";
 
 // ══════════════════════════════════════════════════════════════
 //  INTERFÍCIE D'USUARI
