@@ -529,9 +529,10 @@
 
   function gasCall(params, callback) {
     var cbName = '_cb' + Date.now() + Math.random().toString(36).slice(2, 6);
+    var sId = '_gs_' + cbName;
     window[cbName] = function(data) {
       try { delete window[cbName]; } catch(e) {}
-      var s = document.getElementById('_gs_pet');
+      var s = document.getElementById(sId);
       if (s) s.parentNode.removeChild(s);
       callback(data);
     };
@@ -539,9 +540,11 @@
       return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
     }).join('&');
     var s = document.createElement('script');
-    s.id = '_gs_pet';
+    s.id = sId;
     s.onerror = function() {
       try { delete window[cbName]; } catch(e) {}
+      var s2 = document.getElementById(sId);
+      if (s2) s2.parentNode.removeChild(s2);
       callback({ ok: false, msg: 'Error de connexió amb el servidor.' });
     };
     s.src = GAS_URL + '?callback=' + cbName + '&' + qs;
