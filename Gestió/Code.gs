@@ -40,10 +40,32 @@ function openApp() {
   SpreadsheetApp.getUi().showModalDialog(html, 'Préstec Portàtils Alumnat');
 }
 
-function doGet() {
-  return HtmlService.createHtmlOutputFromFile('Index')
-    .setTitle('Préstec Portàtils Alumnat')
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+// ──────────────────────────────────────────────────────────────
+//  API JSONP per a GitHub Pages
+//  Desplegament: "Execute as: Me · Who has access: Anyone"
+// ──────────────────────────────────────────────────────────────
+function doGet(e) {
+  var p  = e && e.parameter ? e.parameter : {};
+  var cb = p.callback || '';
+  var result;
+
+  try {
+    if      (p.action === 'loadDB')            result = JSON.parse(loadDB());
+    else if (p.action === 'saveChanges')      { saveChanges(p.data || '{}'); result = { ok: true }; }
+    else if (p.action === 'loadPeticions')     result = JSON.parse(loadPeticions());
+    else if (p.action === 'loadPlantilles')    result = JSON.parse(loadPlantilles());
+    else if (p.action === 'enviarCorreu')      result = JSON.parse(enviarCorreuDirecte(p.tplId || '', p.aluId || '', p.dest || ''));
+    else if (p.action === 'enviarAccCondicions') result = JSON.parse(enviarAcceptarCondicionsLot(p.alumnes || '[]'));
+    else if (p.action === 'syncRegistreManual')  result = JSON.parse(syncRegistreManual());
+    else result = { ok: false, msg: 'Acció no reconeguda.' };
+  } catch(ex) {
+    result = { ok: false, msg: ex.message };
+  }
+
+  var json = JSON.stringify(result);
+  return ContentService
+    .createTextOutput(cb ? cb + '(' + json + ');' : json)
+    .setMimeType(cb ? ContentService.MimeType.JAVASCRIPT : ContentService.MimeType.JSON);
 }
 
 // ══════════════════════════════════════════════════════════════

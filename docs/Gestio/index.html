@@ -470,48 +470,49 @@ code{font-size:.78rem;background:var(--g100);padding:1px 5px;border-radius:4px}
 // ── DB ──────────────────────────────────────────
 let db = { portatils: [], alumnes: [], prestecs: [] };
 
+const GAS_URL = '';
+
+function gasCall(params, callback) {
+  var cbName = '_cb' + Date.now() + Math.random().toString(36).slice(2, 6);
+  var sId = '_gs_' + cbName;
+  window[cbName] = function(data) {
+    try { delete window[cbName]; } catch(e) {}
+    var s = document.getElementById(sId);
+    if (s) s.parentNode.removeChild(s);
+    callback(data);
+  };
+  var qs = Object.keys(params).map(function(k) {
+    return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
+  }).join('&');
+  var s = document.createElement('script');
+  s.id = sId;
+  s.onerror = function() {
+    try { delete window[cbName]; } catch(e) {}
+    var s2 = document.getElementById(sId);
+    if (s2) s2.parentNode.removeChild(s2);
+    callback({ ok: false, msg: 'Error de connexió amb el servidor.' });
+  };
+  s.src = GAS_URL + '?callback=' + cbName + '&' + qs;
+  document.head.appendChild(s);
+}
+
 function lDB(callback) {
-  google.script.run
-    .withSuccessHandler(function(raw) {
-      try { if (raw) db = JSON.parse(raw); } catch(e) {}
-      if (callback) callback();
-    })
-    .withFailureHandler(function(err) {
-      console.error('Error carregant DB:', err);
-      if (callback) callback();
-    })
-    .loadDB();
+  gasCall({ action: 'loadDB' }, function(resp) {
+    if (resp && resp.portatils) db = resp;
+    if (callback) callback();
+  });
 }
 
-/**
- * Desa només els registres indicats (upsert per ID) — molt més ràpid.
- * @param {object|function} changes  { portatils:[...], alumnes:[...], prestecs:[...] }
- *   Si es passa directament una funció (crida antiga), envia tota la DB (fallback).
- * @param {function} [callback]
- */
 function sDB(changes, callback) {
-  // Compatibilitat crida antiga sDB(callback) → full save (per a importació CSV)
-  if (typeof changes === 'function') {
-    callback = changes;
-    _sendSave('saveDB', JSON.stringify(db), callback);
-    return;
-  }
-  _sendSave('saveChanges', JSON.stringify(changes), callback);
-}
-
-function _sendSave(fnName, payload, callback) {
   document.getElementById('saving-overlay').classList.add('show');
-  google.script.run
-    .withSuccessHandler(function() {
-      document.getElementById('saving-overlay').classList.remove('show');
+  gasCall({ action: 'saveChanges', data: JSON.stringify(changes) }, function(resp) {
+    document.getElementById('saving-overlay').classList.remove('show');
+    if (resp && resp.ok !== false) {
       if (callback) callback();
-    })
-    .withFailureHandler(function(err) {
-      document.getElementById('saving-overlay').classList.remove('show');
-      console.error('Error desant:', err);
-      alert('❌ Error desant les dades al full de càlcul:\n' + (err.message || String(err)));
-    })
-    [fnName](payload);
+    } else {
+      alert('❌ Error desant les dades: ' + (resp && resp.msg ? resp.msg : 'Error desconegut'));
+    }
+  });
 }
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
@@ -732,29 +733,27 @@ function rCor() {
   document.getElementById('cor-empty').style.display   = 'none';
   document.getElementById('cor-main').style.display    = 'none';
 
-  google.script.run
-    .withSuccessHandler(function(raw) {
-      try { tplsData = JSON.parse(raw); } catch(e) { tplsData = { assumpte: '', plantilles: [] }; }
-      document.getElementById('cor-loading').style.display = 'none';
-      if (!tplsData.plantilles.length) { document.getElementById('cor-empty').style.display = 'block'; return; }
-      if (!selTplId || !tplsData.plantilles.find(t => t.id === selTplId)) {
-        selTplId = tplsData.plantilles[0].id;
-        syncDest(tplsData.plantilles[0].dest);
-      }
-      rTplList();
-      const sel = document.getElementById('cor-alu');
-      sel.innerHTML = '<option value="">— Selecciona alumne/a —</option>' +
-        db.alumnes.map(a => '<option value="' + a.id + '">' + nC(a) + (a.curs ? ' (' + a.curs + (a.grup ? ' ' + a.grup : '') + ')' : '') + '</option>').join('');
-      if (corPreselAlu) { sel.value = corPreselAlu; corPreselAlu = null; }
-      document.getElementById('cor-main').style.display = 'block';
-      rEP();
-    })
-    .withFailureHandler(function(err) {
-      document.getElementById('cor-loading').style.display = 'none';
-      document.getElementById('cor-err-msg').textContent = err.message || String(err);
+  gasCall({ action: 'loadPlantilles' }, function(resp) {
+    document.getElementById('cor-loading').style.display = 'none';
+    if (!resp || !resp.plantilles) {
+      document.getElementById('cor-err-msg').textContent = (resp && resp.msg) ? resp.msg : 'Error desconegut';
       document.getElementById('cor-error').style.display = 'block';
-    })
-    .loadPlantilles();
+      return;
+    }
+    tplsData = resp;
+    if (!tplsData.plantilles.length) { document.getElementById('cor-empty').style.display = 'block'; return; }
+    if (!selTplId || !tplsData.plantilles.find(t => t.id === selTplId)) {
+      selTplId = tplsData.plantilles[0].id;
+      syncDest(tplsData.plantilles[0].dest);
+    }
+    rTplList();
+    const sel = document.getElementById('cor-alu');
+    sel.innerHTML = '<option value="">— Selecciona alumne/a —</option>' +
+      db.alumnes.map(a => '<option value="' + a.id + '">' + nC(a) + (a.curs ? ' (' + a.curs + (a.grup ? ' ' + a.grup : '') + ')' : '') + '</option>').join('');
+    if (corPreselAlu) { sel.value = corPreselAlu; corPreselAlu = null; }
+    document.getElementById('cor-main').style.display = 'block';
+    rEP();
+  });
 }
 
 function rTplList() {
@@ -807,16 +806,14 @@ function enviarCorreu() {
   if (!selTplId || !aluId) { alert('Selecciona una plantilla i un alumne/a abans d\'enviar.'); return; }
   const btn = document.getElementById('btn-enviar');
   btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Enviant...';
-  google.script.run
-    .withSuccessHandler(function(raw) {
-      btn.disabled = false; btn.innerHTML = '📨 Enviar ara';
-      try { const res = JSON.parse(raw); alert(res.ok ? '✅ ' + res.msg : '⚠️ ' + res.msg); } catch(e) { alert('✅ Correu enviat correctament.'); }
-    })
-    .withFailureHandler(function(err) {
-      btn.disabled = false; btn.innerHTML = '📨 Enviar ara';
-      alert('❌ Error en enviar el correu:\n' + (err.message || String(err)));
-    })
-    .enviarCorreuDirecte(selTplId, aluId, dest);
+  gasCall({ action: 'enviarCorreu', tplId: selTplId, aluId: aluId, dest: dest }, function(resp) {
+    btn.disabled = false; btn.innerHTML = '📨 Enviar ara';
+    if (resp && resp.ok !== undefined) {
+      alert(resp.ok ? '✅ ' + resp.msg : '⚠️ ' + resp.msg);
+    } else {
+      alert('✅ Correu enviat correctament.');
+    }
+  });
 }
 
 function copyEmail() {
@@ -1074,16 +1071,17 @@ function impConfirm() {
   const fields = IMP_FIELDS[imp.tipus];
   const req = fields.filter(f => f.req);
   let imported = 0, skip = 0;
+  const newAlumnes = [], newPortatils = [];
   imp.rows.forEach(row => {
     const miss = req.some(f => !imp.mapping[f.key] || !row[imp.mapping[f.key]]);
     if (miss) { skip++; return; }
     const rec = { id: uid() };
     fields.forEach(f => { if (imp.mapping[f.key]) rec[f.key] = (row[imp.mapping[f.key]] || '').trim(); });
-    if (imp.tipus === 'alumnes') db.alumnes.push(rec);
-    else { if (!rec.estat) rec.estat = 'disponible'; db.portatils.push(rec); }
+    if (imp.tipus === 'alumnes') { db.alumnes.push(rec); newAlumnes.push(rec); }
+    else { if (!rec.estat) rec.estat = 'disponible'; db.portatils.push(rec); newPortatils.push(rec); }
     imported++;
   });
-  sDB(() => {
+  sDB({ portatils: newPortatils, alumnes: newAlumnes, prestecs: [] }, () => {
     cM('mo-imp');
     setTimeout(() => {
       alert('✅ ' + imported + ' registres importats correctament.' + (skip ? '\n⚠️ ' + skip + ' files omeses per manca de dades obligatòries.' : ''));
@@ -1110,24 +1108,16 @@ function rPet() {
   document.getElementById('pet-error').style.display   = 'none';
   document.getElementById('pet-main').style.display    = 'none';
 
-  google.script.run
-    .withSuccessHandler(function(raw) {
-      var res; try { res = JSON.parse(raw); } catch(e) { res = { ok: false, msg: 'Error parsejant dades.' }; }
-      document.getElementById('pet-loading').style.display = 'none';
-      if (!res.ok) {
-        document.getElementById('pet-err-msg').textContent = res.msg;
-        document.getElementById('pet-error').style.display = 'block';
-        return;
-      }
-      rPetTable(res.data);
-      document.getElementById('pet-main').style.display = 'block';
-    })
-    .withFailureHandler(function(err) {
-      document.getElementById('pet-loading').style.display = 'none';
-      document.getElementById('pet-err-msg').textContent = err.message || String(err);
+  gasCall({ action: 'loadPeticions' }, function(resp) {
+    document.getElementById('pet-loading').style.display = 'none';
+    if (!resp || !resp.ok) {
+      document.getElementById('pet-err-msg').textContent = (resp && resp.msg) ? resp.msg : 'Error desconegut';
       document.getElementById('pet-error').style.display = 'block';
-    })
-    .loadPeticions();
+      return;
+    }
+    rPetTable(resp.data);
+    document.getElementById('pet-main').style.display = 'block';
+  });
 }
 
 function rPetTable(data) {
@@ -1235,47 +1225,31 @@ function enviarAccCondicions() {
   btn.disabled = true;
   btn.innerHTML = '<span class="spin"></span> Enviant...';
 
-  google.script.run
-    .withSuccessHandler(function(raw) {
-      var res; try { res = JSON.parse(raw); } catch(e) { res = { ok: false, msg: 'Error parsejant resposta.' }; }
-      btn.disabled = false;
-      btn.innerHTML = '📨 Enviar AcceptarCondicions';
-      alert(res.msg || (res.ok ? '✅ Fet!' : '❌ Error'));
-      rPet();
-    })
-    .withFailureHandler(function(err) {
-      btn.disabled = false;
-      btn.innerHTML = '📨 Enviar AcceptarCondicions';
-      alert('❌ Error: ' + (err.message || String(err)));
-    })
-    .enviarAcceptarCondicionsLot(JSON.stringify(alumnes));
+  gasCall({ action: 'enviarAccCondicions', alumnes: JSON.stringify(alumnes) }, function(resp) {
+    btn.disabled = false;
+    btn.innerHTML = '📨 Enviar AcceptarCondicions';
+    alert(resp.msg || (resp.ok ? '✅ Fet!' : '❌ Error'));
+    rPet();
+  });
 }
 
 // ── SYNC ALUMNES ─────────────────────────────────
 function syncAlumnes(btn) {
   btn.disabled = true;
   btn.innerHTML = '<span class="spin"></span>';
-  google.script.run
-    .withSuccessHandler(function(raw) {
-      var res; try { res = JSON.parse(raw); } catch(e) { res = { ok: false, msg: 'Error parsejant resposta.' }; }
-      btn.disabled = false;
-      btn.innerHTML = '🔄 Actualitzar';
-      if (res.ok) {
-        var msg = res.copiats > 0
-          ? '✅ ' + res.copiats + ' alumne' + (res.copiats !== 1 ? 's' : '') + ' nou' + (res.copiats !== 1 ? 's' : '') + ' afegit' + (res.copiats !== 1 ? 's' : '') + ' correctament.'
-          : 'ℹ️ No hi ha alumnes nous per sincronitzar.';
-        alert(msg);
-        lDB(rAlu);
-      } else {
-        alert('❌ Error en sincronitzar: ' + res.msg);
-      }
-    })
-    .withFailureHandler(function(err) {
-      btn.disabled = false;
-      btn.innerHTML = '🔄 Actualitzar';
-      alert('❌ Error: ' + (err.message || String(err)));
-    })
-    .syncRegistreManual();
+  gasCall({ action: 'syncRegistreManual' }, function(resp) {
+    btn.disabled = false;
+    btn.innerHTML = '🔄 Actualitzar';
+    if (resp && resp.ok) {
+      var msg = resp.copiats > 0
+        ? '✅ ' + resp.copiats + ' alumne' + (resp.copiats !== 1 ? 's' : '') + ' nou' + (resp.copiats !== 1 ? 's' : '') + ' afegit' + (resp.copiats !== 1 ? 's' : '') + ' correctament.'
+        : 'ℹ️ No hi ha alumnes nous per sincronitzar.';
+      alert(msg);
+      lDB(rAlu);
+    } else {
+      alert('❌ Error en sincronitzar: ' + ((resp && resp.msg) || 'Error desconegut'));
+    }
+  });
 }
 
 // ── INIT ────────────────────────────────────────
