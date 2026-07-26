@@ -113,9 +113,22 @@ code{font-size:.78rem;background:var(--g100);padding:1px 5px;border-radius:4px}
 #saving-overlay.show{display:flex}
 #saving-box{background:#fff;border-radius:12px;padding:24px 32px;display:flex;align-items:center;gap:14px;font-size:.95rem;font-weight:500;color:var(--g700);box-shadow:0 10px 30px rgba(0,0,0,.2)}
 @media(max-width:860px){.cards{grid-template-columns:repeat(2,1fr)}.fr{grid-template-columns:1fr}}
+@media(max-width:768px){
+  #sb{transform:translateX(-100%);transition:transform .25s ease;z-index:300}
+  #sb.mob-open{transform:translateX(0)}
+  #main{margin-left:0}
+  #mob-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200}
+  #mob-overlay.show{display:block}
+  #mob-menu-btn{display:flex!important}
+  #topbar{padding:10px 14px}
+  #content{padding:14px}
+  .cards{grid-template-columns:repeat(2,1fr)}
+}
 </style>
 </head>
 <body>
+
+<div id="mob-overlay" onclick="closeSidebar()"></div>
 
 <!-- Overlay global "Desant..." -->
 <div id="saving-overlay">
@@ -138,12 +151,15 @@ code{font-size:.78rem;background:var(--g100);padding:1px 5px;border-radius:4px}
 
 <div id="main">
   <div id="topbar">
-    <h1 id="ttl">Tauler</h1>
+    <div style="display:flex;align-items:center;gap:10px">
+      <button id="mob-menu-btn" class="btn btn-out btn-sm" onclick="toggleSidebar()" style="display:none;padding:6px 10px;font-size:1.1rem">☰</button>
+      <h1 id="ttl">Tauler</h1>
+    </div>
     <div style="display:flex;gap:7px">
       <button class="btn btn-teal btn-sm" onclick="oImport()">⬆️ Importar CSV</button>
       <button class="btn btn-out btn-sm" onclick="exportCSV()">⬇️ Exportar CSV</button>
     </div>
-  </div>
+  </div><!-- /topbar -->
   <div id="content">
 
     <!-- DASHBOARD -->
@@ -530,6 +546,16 @@ function bEst(e) {
   const [c, t] = m[e] || ['b-g', e]; return '<span class="badge ' + c + '">' + t + '</span>';
 }
 
+// ── SIDEBAR MÒBIL ───────────────────────────────
+function toggleSidebar() {
+  document.getElementById('sb').classList.toggle('mob-open');
+  document.getElementById('mob-overlay').classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('sb').classList.remove('mob-open');
+  document.getElementById('mob-overlay').classList.remove('show');
+}
+
 // ── NAV ─────────────────────────────────────────
 const TITLES = { dashboard: 'Tauler', peticions: 'Peticions de portàtil', inventari: 'Inventari de portàtils', alumnes: 'Alumnat', prestecs: 'Préstecs actius', historial: 'Historial', ficurs: 'Fi de curs', correus: 'Correus' };
 document.querySelectorAll('.nl').forEach(a => {
@@ -541,6 +567,7 @@ document.querySelectorAll('.nl').forEach(a => {
     document.getElementById('sec-' + s).classList.add('active');
     document.getElementById('ttl').textContent = TITLES[s];
     rSec(s);
+    closeSidebar();
   });
 });
 function rSec(s) {
