@@ -523,18 +523,30 @@
 </div>
 
 <script>
-  // Detecta navegadors in-app (Gmail iOS, Facebook, etc.) que bloquegen JSONP
+  // Detecta navegadors in-app que bloquegen JSONP
   (function() {
     var ua = navigator.userAgent || '';
-    var isInApp = /FBAN|FBAV/i.test(ua) ||
+    var isIOS    = /iP(hone|od|ad)/i.test(ua);
+    var isAndroid = /Android/i.test(ua);
+    // iOS: SFSafariViewController / WKWebView → navigator.standalone és undefined
+    // Real Safari (l'app) → navigator.standalone és false o true
+    var isIOSInApp = isIOS && !/CriOS|FxiOS|EdgiOS/i.test(ua) &&
+                    typeof navigator.standalone === 'undefined';
+    var isInApp = isIOSInApp ||
+                  /FBAN|FBAV|Instagram|Line\//i.test(ua) ||
                   /GSA\//i.test(ua) ||
-                  (ua.indexOf('Android') > -1 && /; wv\b/.test(ua));
-    if (!isInApp) return;
-    var b = document.createElement('div');
-    b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#fff3cd;color:#7a5100;padding:14px 16px;text-align:center;font-size:14px;border-bottom:2px solid #ffc107;font-family:sans-serif;line-height:1.5';
-    b.innerHTML = '⚠️ Per poder enviar el formulari, obre\'l en el teu navegador.<br>' +
-      '<a href="' + window.location.href + '" target="_blank" style="color:#004085;font-weight:bold;text-decoration:underline;">Obrir en Chrome / Safari →</a>';
-    document.body ? document.body.insertBefore(b, document.body.firstChild) : document.addEventListener('DOMContentLoaded', function(){ document.body.insertBefore(b, document.body.firstChild); });
+                  (isAndroid && /; wv\b/.test(ua));
+    function showBanner() {
+      var b = document.createElement('div');
+      b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#fff3cd;color:#7a5100;padding:14px 16px;text-align:center;font-size:14px;border-bottom:2px solid #ffc107;font-family:sans-serif;line-height:1.6';
+      b.innerHTML = '⚠️ Per poder enviar el formulari, obre\'l en el teu navegador.<br>' +
+        '<a href="' + window.location.href + '" target="_blank" style="color:#004085;font-weight:bold;text-decoration:underline;">Obrir en Chrome / Safari →</a>';
+      document.body.insertBefore(b, document.body.firstChild);
+    }
+    if (isInApp) {
+      document.addEventListener('DOMContentLoaded', showBanner);
+      return;
+    }
   })();
 
   const GAS_URL = 'https://script.google.com/macros/s/AKfycbzP7Ok8uB8R_S9Ew3RaBqmD0hCLzjpyy39wjTHkaMgwfAE6D0QN7iuZ7vVifoYDo-F3nQ/exec';
@@ -559,7 +571,15 @@
       try { delete window[cbName]; } catch(e) {}
       var s2 = document.getElementById(sId);
       if (s2) s2.parentNode.removeChild(s2);
-      callback({ ok: false, msg: 'Error de connexió amb el servidor.' });
+      if (!document.getElementById('_inapp_banner')) {
+        var b = document.createElement('div');
+        b.id = '_inapp_banner';
+        b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#fff3cd;color:#7a5100;padding:14px 16px;text-align:center;font-size:14px;border-bottom:2px solid #ffc107;font-family:sans-serif;line-height:1.6';
+        b.innerHTML = '⚠️ El teu navegador no pot contactar amb el servidor.<br>' +
+          '<a href="' + window.location.href + '" target="_blank" style="color:#004085;font-weight:bold;text-decoration:underline;">Obre el formulari en Chrome o Safari →</a>';
+        document.body.insertBefore(b, document.body.firstChild);
+      }
+      callback({ ok: false, msg: 'Error de connexió. Obre el formulari en Chrome o Safari.' });
     };
     s.src = GAS_URL + '?callback=' + cbName + '&' + qs;
     document.head.appendChild(s);
