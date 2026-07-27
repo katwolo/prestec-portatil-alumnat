@@ -111,24 +111,13 @@
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbxDMYr6DMrtZMq08Thksii5Ter1K4a2y4FGk3beXd1sstKSeCY-wEO2Si3f_2_kWJXi/exec';
 
     function gasCall(params, callback) {
-      var cbName = '_cb' + Date.now() + Math.random().toString(36).slice(2, 6);
-      window[cbName] = function(data) {
-        try { delete window[cbName]; } catch(e) {}
-        var s = document.getElementById('_gs_reg');
-        if (s) s.parentNode.removeChild(s);
-        callback(data);
-      };
       var qs = Object.keys(params).map(function(k) {
         return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
       }).join('&');
-      var s = document.createElement('script');
-      s.id = '_gs_reg';
-      s.onerror = function() {
-        try { delete window[cbName]; } catch(e) {}
-        callback({ ok: false, msg: 'Error de connexió amb el servidor.' });
-      };
-      s.src = GAS_URL + '?callback=' + cbName + '&' + qs;
-      document.head.appendChild(s);
+      fetch(GAS_URL + '?' + qs)
+        .then(function(r) { return r.json(); })
+        .then(function(data) { callback(data); })
+        .catch(function() { callback({ ok: false, msg: 'Error de connexió amb el servidor.' }); });
     }
 
     // Pre-omplir camps des dels paràmetres de la URL
