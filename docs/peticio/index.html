@@ -523,6 +523,20 @@
 </div>
 
 <script>
+  // Detecta navegadors in-app (Gmail iOS, Facebook, etc.) que bloquegen JSONP
+  (function() {
+    var ua = navigator.userAgent || '';
+    var isInApp = /FBAN|FBAV/i.test(ua) ||
+                  /GSA\//i.test(ua) ||
+                  (ua.indexOf('Android') > -1 && /; wv\b/.test(ua));
+    if (!isInApp) return;
+    var b = document.createElement('div');
+    b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#fff3cd;color:#7a5100;padding:14px 16px;text-align:center;font-size:14px;border-bottom:2px solid #ffc107;font-family:sans-serif;line-height:1.5';
+    b.innerHTML = '⚠️ Per poder enviar el formulari, obre\'l en el teu navegador.<br>' +
+      '<a href="' + window.location.href + '" target="_blank" style="color:#004085;font-weight:bold;text-decoration:underline;">Obrir en Chrome / Safari →</a>';
+    document.body ? document.body.insertBefore(b, document.body.firstChild) : document.addEventListener('DOMContentLoaded', function(){ document.body.insertBefore(b, document.body.firstChild); });
+  })();
+
   const GAS_URL = 'https://script.google.com/macros/s/AKfycbzP7Ok8uB8R_S9Ew3RaBqmD0hCLzjpyy39wjTHkaMgwfAE6D0QN7iuZ7vVifoYDo-F3nQ/exec';
 
   let comptador = 0;
