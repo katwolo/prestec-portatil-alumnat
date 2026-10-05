@@ -288,7 +288,7 @@ function enviarCorreuDirecte(templateId, alumneId, destOverride) {
       try {
         GmailApp.sendEmail(d.email, assumpte, '', {
           htmlBody: cos,
-          name:     'Departament AFD'
+          name:     'Departament TIC'
         });
         registrarEnviament_(d.email, assumpte);
         enviats.push(d.nom + ' <' + d.email + '>');
@@ -415,7 +415,7 @@ function enviarCorreus() {
 
     destinataris.forEach(function(email) {
       try {
-        var opts = { htmlBody: cos, name: 'Departament AFD' };
+        var opts = { htmlBody: cos, name: 'Departament TIC' };
         if (blobs.length) opts.attachments = blobs;
         GmailApp.sendEmail(email, assumpte, '', opts);
         enviats++;
@@ -608,7 +608,7 @@ function enviarAcceptarCondicionsLot(alumnesJson) {
       var cos      = renderPlaceholders_(plantilla.cos, dic);
       var assumpFi = renderPlaceholders_(assumpte, dic);
       try {
-        GmailApp.sendEmail(a.emailAlum, assumpFi, '', { htmlBody: cos, name: 'Departament AFD' });
+        GmailApp.sendEmail(a.emailAlum, assumpFi, '', { htmlBody: cos, name: 'Departament TIC' });
         registrarEnviament_(a.emailAlum, assumpFi);
         if (shPet && a.rowNum) shPet.getRange(a.rowNum, 10).setValue(new Date());
         enviats++;
