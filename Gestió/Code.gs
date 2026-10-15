@@ -54,7 +54,8 @@ function doGet(e) {
     else if (p.action === 'saveChanges')      { saveChanges(p.data || '{}'); result = { ok: true }; }
     else if (p.action === 'loadPeticions')     result = JSON.parse(loadPeticions());
     else if (p.action === 'loadPlantilles')    result = JSON.parse(loadPlantilles());
-    else if (p.action === 'enviarCorreu')      result = JSON.parse(enviarCorreuDirecte(p.tplId || '', p.aluId || '', p.dest || ''));
+    else if (p.action === 'enviarCorreu')      result = JSON.parse(enviarCorreuDirecte(p.tplId || '', p.aluId || '', p.dest || '', p.customBody || ''));
+    else if (p.action === 'guardarPlantilla') { guardarPlantilla_(p.tplId || '', p.cos || ''); result = { ok: true }; }
     else if (p.action === 'enviarAccCondicions') result = JSON.parse(enviarAcceptarCondicionsLot(p.alumnes || '[]'));
     else if (p.action === 'syncRegistreManual')  result = JSON.parse(syncRegistreManual());
     else if (p.action === 'marcarVist')          { marcarVist_(p.id || ''); result = { ok: true }; }
@@ -244,7 +245,21 @@ function buildDadesPortatilsByAluId_(alumneId) {
 //  ENVIAMENT DIRECTE DES DE LA WEB APP
 // ══════════════════════════════════════════════════════════════
 
-function enviarCorreuDirecte(templateId, alumneId, destOverride) {
+function guardarPlantilla_(tplId, cos) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName('Plantilles');
+  if (!sh) throw new Error('No s\'ha trobat la pestanya "Plantilles".');
+  var data = sh.getDataRange().getValues();
+  for (var i = 4; i < data.length; i++) {
+    if (String(data[i][0]).trim() === String(tplId).trim()) {
+      sh.getRange(i + 1, 2).setValue(cos);
+      return;
+    }
+  }
+  throw new Error('Plantilla "' + tplId + '" no trobada.');
+}
+
+function enviarCorreuDirecte(templateId, alumneId, destOverride, customBody) {
   try {
     var tplData   = JSON.parse(loadPlantilles());
     var plantilla = null;
@@ -277,7 +292,7 @@ function enviarCorreuDirecte(templateId, alumneId, destOverride) {
     };
 
     var assumpte = renderPlaceholders_(tplData.assumpte || 'Correu — Préstec portàtil', dic);
-    var cos      = renderPlaceholders_(plantilla.cos, dic);
+    var cos      = customBody ? customBody : renderPlaceholders_(plantilla.cos, dic);
 
     var dest = (destOverride || plantilla.dest || 'alumnat').toLowerCase();
     var destinataris = [];

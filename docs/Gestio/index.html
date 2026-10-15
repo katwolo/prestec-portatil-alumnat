@@ -65,6 +65,13 @@ tr:hover td{background:var(--g50)}
 .pwd-t{font-family:monospace;background:var(--g100);padding:2px 7px;border-radius:4px;font-size:.78rem;display:none}
 .pwd-t.vis{display:inline}
 .pwd-w{display:flex;gap:5px;align-items:center}
+/* Cerca alumnes (correus) */
+.alu-dd{position:absolute;top:calc(100% + 2px);left:0;right:0;background:#fff;border:1px solid var(--g200);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);max-height:200px;overflow-y:auto;z-index:200;display:none}
+.alu-dd-item{padding:8px 14px;cursor:pointer;font-size:.86rem;border-bottom:1px solid var(--g100)}
+.alu-dd-item:last-child{border-bottom:none}
+.alu-dd-item:hover{background:var(--pri-l);color:var(--pri-d)}
+/* Edició cos correu */
+.ep-edit-bar{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 /* Alumnes nous */
 .badge-nou{display:inline-block;background:#2563eb;color:#fff;font-size:.65rem;font-weight:700;padding:2px 6px;border-radius:20px;letter-spacing:.04em;vertical-align:middle;margin-left:6px}
 tr.fila-nova{background:#eff6ff}
@@ -127,6 +134,7 @@ code{font-size:.78rem;background:var(--g100);padding:1px 5px;border-radius:4px}
   #topbar{padding:10px 14px}
   #content{padding:14px}
   .cards{grid-template-columns:repeat(2,1fr)}
+  #cor-main .cor-grid{grid-template-columns:1fr!important}
 }
 </style>
 </head>
@@ -288,21 +296,23 @@ code{font-size:.78rem;background:var(--g100);padding:1px 5px;border-radius:4px}
         <div style="text-align:center;margin-top:8px"><button class="btn btn-out btn-sm" onclick="rCor()">🔄 Recarregar</button></div>
       </div>
       <div id="cor-main" style="display:none">
-        <div style="display:grid;grid-template-columns:250px 1fr;gap:20px;align-items:start">
+        <div class="cor-grid" style="display:grid;grid-template-columns:250px 1fr;gap:20px;align-items:start">
           <div>
             <div class="sec-lbl">Plantilles</div>
             <div id="tpl-list"></div>
-            <div style="margin-top:10px">
+            <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px">
+              <button class="btn btn-out btn-sm" style="width:100%;justify-content:center" onclick="editarPlantilla()">📝 Editar plantilla</button>
               <button class="btn btn-out btn-sm" style="width:100%;justify-content:center" onclick="rCor()">🔄 Actualitzar</button>
             </div>
           </div>
           <div>
             <div class="fr" style="margin-bottom:14px">
-              <div class="fg" style="margin:0">
+              <div class="fg" style="margin:0;position:relative">
                 <label>Alumne/a *</label>
-                <select class="sel" id="cor-alu" onchange="rEP()">
-                  <option value="">— Selecciona alumne/a —</option>
-                </select>
+                <input class="inp" id="cor-alu-q" placeholder="🔍 Cerca alumne/a..." autocomplete="off"
+                  oninput="filtrarAluCor()" onfocus="mostrarAluCor()" onblur="setTimeout(()=>document.getElementById('cor-alu-dd').style.display='none',160)">
+                <input type="hidden" id="cor-alu">
+                <div class="alu-dd" id="cor-alu-dd"></div>
               </div>
               <div class="fg" style="margin:0">
                 <label>Destinatari</label>
@@ -324,15 +334,33 @@ code{font-size:.78rem;background:var(--g100);padding:1px 5px;border-radius:4px}
                 <span class="ep-empty">Selecciona una plantilla i un alumne/a per veure la previsualització.</span>
               </div>
             </div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <div id="ep-edit-bar" class="ep-edit-bar" style="display:none">
+              <button class="btn btn-teal btn-sm" onclick="usarNomesAra()">✅ Usar sols ara</button>
+              <button class="btn btn-out btn-sm" onclick="cancelEdicio()">✕ Cancel·lar edició</button>
+            </div>
+            <div id="ep-action-bar" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
               <button class="btn btn-pri" id="btn-enviar" onclick="enviarCorreu()">📨 Enviar ara</button>
               <button class="btn btn-out btn-sm" onclick="copyEmail()">📋 Copiar text</button>
+              <button class="btn btn-out btn-sm" id="btn-editar-cos" onclick="activarEdicioCos()" style="display:none">✏️ Editar per enviar</button>
             </div>
           </div>
         </div>
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- ═══ MODAL editar plantilla ═══ -->
+<div class="mo" id="mo-tpl">
+  <div class="mb">
+    <div class="mh"><h3 id="mtpl-ttl">Editar plantilla</h3><button class="mc" onclick="cM('mo-tpl')">×</button></div>
+    <div class="alert al-info" style="margin-bottom:14px;font-size:.82rem">Pots usar <strong>{{nombreAlumno}}</strong>, <strong>{{correoAlumno}}</strong>, <strong>{{nombreTutor}}</strong>, <strong>{{correoTutor}}</strong>, <strong>{{Dadesportatils}}</strong>. Pots escriure HTML.</div>
+    <div class="fg"><label>Cos de la plantilla</label><textarea class="ta" id="mtpl-cos" rows="12" style="font-family:monospace;font-size:.82rem"></textarea></div>
+    <div class="mf">
+      <button class="btn btn-out" onclick="cM('mo-tpl')">Cancel·lar</button>
+      <button class="btn btn-pri" onclick="desarPlantilla()">💾 Desar plantilla</button>
+    </div>
   </div>
 </div>
 
@@ -718,8 +746,11 @@ function sFCEdit() {
 //  CORREUS
 // ══════════════════════════════════════════════════════════════
 
-let tplsData = { assumpte: '', plantilles: [] };
-let selTplId  = null;
+let tplsData    = { assumpte: '', plantilles: [] };
+let selTplId    = null;
+let aluCatalog  = [];
+let customCorpus = null;
+let cosOriginal  = '';
 let corPreselAlu = null;
 let petData = [];
 
@@ -781,10 +812,12 @@ function rCor() {
       syncDest(tplsData.plantilles[0].dest);
     }
     rTplList();
-    const sel = document.getElementById('cor-alu');
-    sel.innerHTML = '<option value="">— Selecciona alumne/a —</option>' +
-      db.alumnes.map(a => '<option value="' + a.id + '">' + nC(a) + (a.curs ? ' (' + a.curs + (a.grup ? ' ' + a.grup : '') + ')' : '') + '</option>').join('');
-    if (corPreselAlu) { sel.value = corPreselAlu; corPreselAlu = null; }
+    aluCatalog = db.alumnes.slice();
+    if (corPreselAlu) {
+      const a = gA(corPreselAlu);
+      if (a) { document.getElementById('cor-alu').value = corPreselAlu; document.getElementById('cor-alu-q').value = nC(a); }
+      corPreselAlu = null;
+    }
     document.getElementById('cor-main').style.display = 'block';
     rEP();
   });
@@ -801,7 +834,85 @@ function sTpl(id) {
   selTplId = id;
   const tpl = tplsData.plantilles.find(t => t.id === id);
   if (tpl) syncDest(tpl.dest);
+  cancelEdicio();
   rTplList(); rEP();
+}
+
+// ── CERCA ALUMNES (correus) ──────────────────────
+function filtrarAluCor() { mostrarAluCor(); }
+function mostrarAluCor() {
+  const q = (document.getElementById('cor-alu-q').value || '').toLowerCase().trim();
+  const dd = document.getElementById('cor-alu-dd');
+  const list = q
+    ? aluCatalog.filter(a => (a.nom + ' ' + a.cog + ' ' + (a.curs || '') + ' ' + (a.email || '')).toLowerCase().includes(q))
+    : aluCatalog;
+  if (!list.length) {
+    dd.innerHTML = '<div class="alu-dd-item" style="color:var(--g400)">Cap resultat</div>';
+    dd.style.display = 'block'; return;
+  }
+  dd.innerHTML = list.slice(0, 40).map(a =>
+    '<div class="alu-dd-item" onmousedown="selAluCor(\'' + escQ(a.id) + '\',\'' + escQ(nC(a)) + '\')">' +
+    escH(nC(a)) + (a.curs ? ' <span style="color:var(--g400);font-size:.78rem">(' + escH(a.curs) + (a.grup ? ' ' + escH(a.grup) : '') + ')</span>' : '') +
+    '</div>'
+  ).join('');
+  dd.style.display = 'block';
+}
+function selAluCor(id, nom) {
+  document.getElementById('cor-alu').value = id;
+  document.getElementById('cor-alu-q').value = nom;
+  document.getElementById('cor-alu-dd').style.display = 'none';
+  rEP();
+}
+
+// ── EDICIÓ COS CORREU ────────────────────────────
+function activarEdicioCos() {
+  const view = document.getElementById('ep-view');
+  if (view.querySelector('.ep-empty')) return;
+  cosOriginal = view.innerHTML;
+  view.contentEditable = 'true';
+  view.style.outline = '2px solid var(--pri)';
+  view.focus();
+  document.getElementById('ep-edit-bar').style.display = 'flex';
+  document.getElementById('ep-action-bar').style.display = 'none';
+}
+function cancelEdicio() {
+  const view = document.getElementById('ep-view');
+  view.contentEditable = 'false';
+  view.style.outline = '';
+  if (cosOriginal) { view.innerHTML = cosOriginal; cosOriginal = ''; }
+  customCorpus = null;
+  document.getElementById('ep-edit-bar').style.display = 'none';
+  document.getElementById('ep-action-bar').style.display = 'flex';
+}
+function usarNomesAra() {
+  customCorpus = document.getElementById('ep-view').innerHTML;
+  cancelEdicio();
+  document.getElementById('ep-view').innerHTML = customCorpus;
+  document.getElementById('ep-action-bar').style.display = 'flex';
+}
+function editarPlantilla() {
+  if (!selTplId) { alert('Selecciona primer una plantilla.'); return; }
+  const tpl = tplsData.plantilles.find(t => t.id === selTplId);
+  if (!tpl) return;
+  document.getElementById('mtpl-ttl').textContent = 'Editar plantilla: ' + selTplId;
+  document.getElementById('mtpl-cos').value = tpl.cos || '';
+  document.getElementById('mo-tpl').classList.add('open');
+}
+function desarPlantilla() {
+  const cos = document.getElementById('mtpl-cos').value;
+  const btn = document.querySelector('#mo-tpl .btn-pri');
+  btn.disabled = true; btn.textContent = 'Desant...';
+  gasCall({ action: 'guardarPlantilla', tplId: selTplId, cos: cos }, function(resp) {
+    btn.disabled = false; btn.textContent = '💾 Desar plantilla';
+    if (resp && resp.ok) {
+      const tpl = tplsData.plantilles.find(t => t.id === selTplId);
+      if (tpl) tpl.cos = cos;
+      cM('mo-tpl');
+      rEP();
+    } else {
+      alert('Error desant la plantilla: ' + (resp && resp.msg ? resp.msg : 'Error desconegut'));
+    }
+  });
 }
 
 function rEP() {
@@ -823,7 +934,9 @@ function rEP() {
   const subEl = document.getElementById('ep-sub');
   subEl.textContent = subRendered || '(sense assumpte)';
   subEl.className   = 'ep-sub-val' + (!subRendered ? ' ep-empty' : '');
+  customCorpus = null;
   document.getElementById('ep-view').innerHTML = cosRendered || '<span class="ep-empty">El cos de la plantilla és buit.</span>';
+  document.getElementById('btn-editar-cos').style.display = cosRendered ? 'inline-flex' : 'none';
   const warnings = [], destLines = [], dNorm = dest.toLowerCase();
   if (dNorm === 'alumnat' || dNorm === 'ambdós') { if (a.email) destLines.push('👨‍🎓 <strong>' + escH(nC(a)) + '</strong> &lt;' + escH(a.email) + '&gt;'); else warnings.push('⚠️ L\'alumne/a <strong>' + escH(nC(a)) + '</strong> no té correu electrònic definit.'); }
   if (dNorm === 'coach' || dNorm === 'ambdós') { if (a.temail) destLines.push('👤 <strong>' + escH(a.tnom || 'Tutor/a') + '</strong> &lt;' + escH(a.temail) + '&gt;'); else warnings.push('⚠️ El tutor/a de <strong>' + escH(nC(a)) + '</strong> no té correu electrònic definit.'); }
@@ -840,8 +953,11 @@ function enviarCorreu() {
   if (!selTplId || !aluId) { alert('Selecciona una plantilla i un alumne/a abans d\'enviar.'); return; }
   const btn = document.getElementById('btn-enviar');
   btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Enviant...';
-  gasCall({ action: 'enviarCorreu', tplId: selTplId, aluId: aluId, dest: dest }, function(resp) {
+  const params = { action: 'enviarCorreu', tplId: selTplId, aluId: aluId, dest: dest };
+  if (customCorpus) params.customBody = customCorpus;
+  gasCall(params, function(resp) {
     btn.disabled = false; btn.innerHTML = '📨 Enviar ara';
+    customCorpus = null;
     if (resp && resp.ok !== undefined) {
       alert(resp.ok ? '✅ ' + resp.msg : '⚠️ ' + resp.msg);
     } else {
