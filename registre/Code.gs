@@ -156,7 +156,8 @@ function sincronitzarRegistre_() {
       row[4] || '', // E — grup
       row[5] || '', // F — email
       row[6] || '', // G — tnom (Coach)
-      row[7] || ''  // H — temail (Mail coach)
+      row[7] || '', // H — temail (Mail coach)
+      'NOU'         // I — nou (flag per destacar a l'app)
     ]);
     shRegistre.getRange(i + 2, 9).setValue('✅');
     copiats++;

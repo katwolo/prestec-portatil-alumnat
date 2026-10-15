@@ -65,6 +65,10 @@ tr:hover td{background:var(--g50)}
 .pwd-t{font-family:monospace;background:var(--g100);padding:2px 7px;border-radius:4px;font-size:.78rem;display:none}
 .pwd-t.vis{display:inline}
 .pwd-w{display:flex;gap:5px;align-items:center}
+/* Alumnes nous */
+.badge-nou{display:inline-block;background:#2563eb;color:#fff;font-size:.65rem;font-weight:700;padding:2px 6px;border-radius:20px;letter-spacing:.04em;vertical-align:middle;margin-left:6px}
+tr.fila-nova{background:#eff6ff}
+tr.fila-nova:hover{background:#dbeafe}
 /* Plantilla cards (correus) */
 .tc{background:#fff;border:2px solid var(--g200);border-radius:8px;padding:12px 14px;cursor:pointer;transition:all .15s;margin-bottom:7px}
 .tc:hover,.tc.sel{border-color:var(--pri);background:var(--pri-l)}
@@ -625,16 +629,19 @@ function tPwd(id) { document.getElementById('pw-' + id)?.classList.toggle('vis')
 // ── ALUMNAT ─────────────────────────────────────
 function rAlu() {
   const q = (document.getElementById('alu-q')?.value || '').toLowerCase();
-  const list = db.alumnes.filter(a => (a.nom + ' ' + a.cog + ' ' + (a.curs || '') + ' ' + (a.email || '')).toLowerCase().includes(q));
+  let list = db.alumnes.filter(a => (a.nom + ' ' + a.cog + ' ' + (a.curs || '') + ' ' + (a.email || '')).toLowerCase().includes(q));
   if (!list.length) { document.getElementById('alu-t').innerHTML = '<div class="es"><div class="ei">👨‍🎓</div><p>' + (db.alumnes.length ? 'Cap resultat.' : 'Afegeix alumnes manualment o importa un CSV.') + '</p></div>'; return; }
+  list = [...list.filter(a => a.nou === 'NOU'), ...list.filter(a => a.nou !== 'NOU')];
   let rows = '';
   list.forEach(a => {
+    const esNou = a.nou === 'NOU';
     const pr = db.prestecs.find(p => p.aId === a.id && p.estat === 'actiu');
     const pc = pr ? gP(pr.pId) : null;
+    const nomTxt = '<strong>' + nC(a) + '</strong>' + (esNou ? '<span class="badge-nou">NOU</span>' : '');
     const cont = a.email ? '<a href="mailto:' + a.email + '" style="color:var(--pri)">' + a.email + '</a>' : '<span style="color:var(--g400);font-size:.8rem">—</span>';
     const tutTxt = '<span style="font-size:.8rem">' + (a.tnom || '—') + '<br><span style="color:var(--g400)">' + (a.temail || '') + '</span></span>';
     const pcTxt = pc ? '<span class="badge b-pri">' + pL(pc) + '</span>' : '<span style="color:var(--g400);font-size:.8rem">Cap</span>';
-    rows += '<tr><td><strong>' + nC(a) + '</strong></td><td style="font-size:.82rem">' + (a.curs || '—') + (a.grup ? ' · ' + a.grup : '') + '</td><td>' + cont + '</td><td>' + tutTxt + '</td><td>' + pcTxt + '</td><td><div style="display:flex;gap:4px"><button class="btn btn-out btn-sm" onclick="oMA(\'' + a.id + '\')">✏️</button></div></td></tr>';
+    rows += '<tr class="' + (esNou ? 'fila-nova' : '') + '"><td>' + nomTxt + '</td><td style="font-size:.82rem">' + (a.curs || '—') + (a.grup ? ' · ' + a.grup : '') + '</td><td>' + cont + '</td><td>' + tutTxt + '</td><td>' + pcTxt + '</td><td><div style="display:flex;gap:4px"><button class="btn btn-out btn-sm" onclick="oMA(\'' + a.id + '\')">✏️</button></div></td></tr>';
   });
   document.getElementById('alu-t').innerHTML = '<table><thead><tr><th>Nom complet</th><th>Curs / Grup</th><th>Correu electrònic</th><th>Tutor/a</th><th>Portàtil assignat</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>';
 }
@@ -883,8 +890,27 @@ function sP() {
 }
 
 function oMA(id) {
-  if (id) { const a = gA(id); document.getElementById('ma-ttl').textContent = 'Editar alumne/a'; document.getElementById('ma-id').value = id; document.getElementById('ma-nom').value = a.nom || ''; document.getElementById('ma-cog').value = a.cog || ''; document.getElementById('ma-curs').value = a.curs || ''; document.getElementById('ma-grup').value = a.grup || ''; document.getElementById('ma-email').value = a.email || ''; document.getElementById('ma-tnom').value = a.tnom || ''; document.getElementById('ma-temail').value = a.temail || ''; }
-  else { document.getElementById('ma-ttl').textContent = 'Nou alumne/a'; document.getElementById('ma-id').value = ''; ['ma-nom', 'ma-cog', 'ma-curs', 'ma-grup', 'ma-email', 'ma-tnom', 'ma-temail'].forEach(f => document.getElementById(f).value = ''); }
+  if (id) {
+    const a = gA(id);
+    document.getElementById('ma-ttl').textContent = 'Editar alumne/a';
+    document.getElementById('ma-id').value = id;
+    document.getElementById('ma-nom').value = a.nom || '';
+    document.getElementById('ma-cog').value = a.cog || '';
+    document.getElementById('ma-curs').value = a.curs || '';
+    document.getElementById('ma-grup').value = a.grup || '';
+    document.getElementById('ma-email').value = a.email || '';
+    document.getElementById('ma-tnom').value = a.tnom || '';
+    document.getElementById('ma-temail').value = a.temail || '';
+    if (a.nou === 'NOU') {
+      a.nou = '';
+      gasCall({ action: 'marcarVist', id: id }, function() {});
+      rAlu();
+    }
+  } else {
+    document.getElementById('ma-ttl').textContent = 'Nou alumne/a';
+    document.getElementById('ma-id').value = '';
+    ['ma-nom', 'ma-cog', 'ma-curs', 'ma-grup', 'ma-email', 'ma-tnom', 'ma-temail'].forEach(f => document.getElementById(f).value = '');
+  }
   document.getElementById('mo-a').classList.add('open');
 }
 

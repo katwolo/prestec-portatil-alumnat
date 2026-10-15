@@ -7,7 +7,7 @@
 
 var HEADERS = {
   portatils: ['id','marca','model','sace','estat','usr','pwd','obs'],
-  alumnes:   ['id','nom','cog','curs','grup','email','tnom','temail'],
+  alumnes:   ['id','nom','cog','curs','grup','email','tnom','temail','nou'],
   prestecs:  ['id','aId','pId','dataE','dataD','curs','obs','obsD','estat']
 };
 
@@ -57,6 +57,7 @@ function doGet(e) {
     else if (p.action === 'enviarCorreu')      result = JSON.parse(enviarCorreuDirecte(p.tplId || '', p.aluId || '', p.dest || ''));
     else if (p.action === 'enviarAccCondicions') result = JSON.parse(enviarAcceptarCondicionsLot(p.alumnes || '[]'));
     else if (p.action === 'syncRegistreManual')  result = JSON.parse(syncRegistreManual());
+    else if (p.action === 'marcarVist')          { marcarVist_(p.id || ''); result = { ok: true }; }
     else result = { ok: false, msg: 'Acció no reconeguda.' };
   } catch(ex) {
     result = { ok: false, msg: ex.message };
@@ -161,6 +162,17 @@ function saveRecord(table, recStr) {
 function saveRecords(table, recsStr) {
   var recs = JSON.parse(recsStr);
   recs.forEach(function(rec) { saveRecord(table, JSON.stringify(rec)); });
+}
+
+function marcarVist_(id) {
+  var sh   = getSheet('alumnes');
+  var data = sh.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(id)) {
+      sh.getRange(i + 1, 9).setValue('');
+      return;
+    }
+  }
 }
 
 // ══════════════════════════════════════════════════════════════
