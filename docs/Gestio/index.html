@@ -364,6 +364,18 @@ code{font-size:.78rem;background:var(--g100);padding:1px 5px;border-radius:4px}
   </div>
 </div>
 
+<!-- ═══ MODAL veure alumne ═══ -->
+<div class="mo" id="mo-va">
+  <div class="mb">
+    <div class="mh"><h3 id="va-ttl">Fitxa alumne/a</h3><button class="mc" onclick="cM('mo-va')">×</button></div>
+    <div id="va-body"></div>
+    <div class="mf">
+      <button class="btn btn-out" onclick="cM('mo-va')">Tancar</button>
+      <button class="btn btn-pri" id="va-btn-edit" onclick="vaEdit()">✏️ Editar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ MODAL portàtil ═══ -->
 <div class="mo" id="mo-p">
   <div class="mb">
@@ -659,19 +671,30 @@ function rAlu() {
   const q = (document.getElementById('alu-q')?.value || '').toLowerCase();
   let list = db.alumnes.filter(a => (a.nom + ' ' + a.cog + ' ' + (a.curs || '') + ' ' + (a.email || '')).toLowerCase().includes(q));
   if (!list.length) { document.getElementById('alu-t').innerHTML = '<div class="es"><div class="ei">👨‍🎓</div><p>' + (db.alumnes.length ? 'Cap resultat.' : 'Afegeix alumnes manualment o importa un CSV.') + '</p></div>'; return; }
-  list = [...list.filter(a => a.nou === 'NOU'), ...list.filter(a => a.nou !== 'NOU')];
+  const nous = list.filter(a => a.nou === 'NOU');
+  const rest = list.filter(a => a.nou !== 'NOU').reverse();
+  list = [...nous, ...rest];
   let rows = '';
   list.forEach(a => {
     const esNou = a.nou === 'NOU';
     const pr = db.prestecs.find(p => p.aId === a.id && p.estat === 'actiu');
     const pc = pr ? gP(pr.pId) : null;
-    const nomTxt = '<strong>' + nC(a) + '</strong>' + (esNou ? '<span class="badge-nou">NOU</span>' : '');
-    const cont = a.email ? '<a href="mailto:' + a.email + '" style="color:var(--pri)">' + a.email + '</a>' : '<span style="color:var(--g400);font-size:.8rem">—</span>';
-    const tutTxt = '<span style="font-size:.8rem">' + (a.tnom || '—') + '<br><span style="color:var(--g400)">' + (a.temail || '') + '</span></span>';
-    const pcTxt = pc ? '<span class="badge b-pri">' + pL(pc) + '</span>' : '<span style="color:var(--g400);font-size:.8rem">Cap</span>';
-    rows += '<tr class="' + (esNou ? 'fila-nova' : '') + '"><td>' + nomTxt + '</td><td style="font-size:.82rem">' + (a.curs || '—') + (a.grup ? ' · ' + a.grup : '') + '</td><td>' + cont + '</td><td>' + tutTxt + '</td><td>' + pcTxt + '</td><td><div style="display:flex;gap:4px"><button class="btn btn-out btn-sm" onclick="oMA(\'' + a.id + '\')">✏️</button></div></td></tr>';
+    const nomTxt = '<strong>' + escH(nC(a)) + '</strong>' + (esNou ? '<span class="badge-nou">NOU</span>' : '');
+    const pcTxt = pc ? '<span class="badge b-pri">' + escH(pL(pc)) + '</span>' : '<span style="color:var(--g400);font-size:.8rem">Cap</span>';
+    const btnLoan = pc
+      ? '<button class="btn btn-ok btn-sm" title="Registrar devolució" onclick="oD(\'' + pr.id + '\')">↩</button>'
+      : '<button class="btn btn-pri btn-sm" title="Nou préstec" onclick="oPresA(\'' + escQ(a.id) + '\')">💻</button>';
+    rows += '<tr class="' + (esNou ? 'fila-nova' : '') + '">' +
+      '<td>' + nomTxt + '</td>' +
+      '<td style="font-size:.82rem">' + escH(a.curs || '—') + (a.grup ? ' · ' + escH(a.grup) : '') + '</td>' +
+      '<td>' + pcTxt + '</td>' +
+      '<td><div style="display:flex;gap:4px">' +
+        '<button class="btn btn-out btn-sm" title="Veure fitxa completa" onclick="oVA(\'' + escQ(a.id) + '\')">📑</button>' +
+        '<button class="btn btn-out btn-sm" title="Editar" onclick="oMA(\'' + escQ(a.id) + '\')">✏️</button>' +
+        btnLoan +
+      '</div></td></tr>';
   });
-  document.getElementById('alu-t').innerHTML = '<table><thead><tr><th>Nom complet</th><th>Curs / Grup</th><th>Correu electrònic</th><th>Tutor/a</th><th>Portàtil assignat</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>';
+  document.getElementById('alu-t').innerHTML = '<table><thead><tr><th>Nom complet</th><th>Curs / Grup</th><th>Portàtil assignat</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>';
 }
 
 // ── PRÉSTECS ────────────────────────────────────
@@ -1055,6 +1078,29 @@ function oPres() {
   document.getElementById('mo-pr').classList.add('open');
 }
 function oPresP(pid) { oPres(); document.getElementById('pr-pc').value = pid; }
+function oPresA(aluId) { oPres(); document.getElementById('pr-alu').value = aluId; }
+
+function oVA(id) {
+  const a = gA(id); if (!a) return;
+  const pr = db.prestecs.find(p => p.aId === id && p.estat === 'actiu');
+  const pc = pr ? gP(pr.pId) : null;
+  const row = function(lbl, val) { return '<div class="fg" style="margin:0"><label>' + lbl + '</label><div style="padding:6px 0;font-size:.9rem;color:var(--g900)">' + val + '</div></div>'; };
+  const link = function(mail) { return mail ? '<a href="mailto:' + escH(mail) + '" style="color:var(--pri)">' + escH(mail) + '</a>' : '—'; };
+  document.getElementById('va-ttl').textContent = nC(a) + (a.nou === 'NOU' ? ' 🆕' : '');
+  document.getElementById('va-body').innerHTML =
+    '<div class="fr" style="margin-bottom:2px">' + row('Nom', escH(a.nom||'—')) + row('Cognoms', escH(a.cog||'—')) + '</div>' +
+    '<div class="fr" style="margin-bottom:2px">' + row('Curs', escH(a.curs||'—')) + row('Grup', escH(a.grup||'—')) + '</div>' +
+    row('Correu electrònic', link(a.email)) +
+    '<div style="margin:14px 0 8px;font-size:.82rem;font-weight:600;color:var(--g700);border-top:1px solid var(--g200);padding-top:14px">👤 Tutor/a</div>' +
+    '<div class="fr" style="margin-bottom:2px">' + row('Nom tutor/a', escH(a.tnom||'—')) + row('Correu tutor/a', link(a.temail)) + '</div>' +
+    '<div style="margin:14px 0 8px;font-size:.82rem;font-weight:600;color:var(--g700);border-top:1px solid var(--g200);padding-top:14px">💻 Portàtil</div>' +
+    (pc
+      ? '<div class="alert al-info" style="margin:0"><strong>' + escH(pL(pc)) + '</strong><br><span style="font-size:.8rem">Entregat el ' + fD(pr.dataE) + ' · ' + dias(pr.dataE) + ' dies</span></div>'
+      : '<div style="color:var(--g400);font-style:italic;font-size:.88rem;padding:6px 0">Cap portàtil assignat.</div>');
+  document.getElementById('va-btn-edit')._aluId = id;
+  document.getElementById('mo-va').classList.add('open');
+}
+function vaEdit() { const id = document.getElementById('va-btn-edit')._aluId; cM('mo-va'); oMA(id); }
 
 function sPr() {
   const aId = document.getElementById('pr-alu').value, pId = document.getElementById('pr-pc').value, dataE = document.getElementById('pr-data').value;
