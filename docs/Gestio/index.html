@@ -355,8 +355,8 @@ code{font-size:.78rem;background:var(--g100);padding:1px 5px;border-radius:4px}
 <div class="mo" id="mo-tpl">
   <div class="mb">
     <div class="mh"><h3 id="mtpl-ttl">Editar plantilla</h3><button class="mc" onclick="cM('mo-tpl')">×</button></div>
-    <div class="alert al-info" style="margin-bottom:14px;font-size:.82rem">Pots usar <strong>{{nombreAlumno}}</strong>, <strong>{{correoAlumno}}</strong>, <strong>{{nombreTutor}}</strong>, <strong>{{correoTutor}}</strong>, <strong>{{Dadesportatils}}</strong>. Pots escriure HTML.</div>
-    <div class="fg"><label>Cos de la plantilla</label><textarea class="ta" id="mtpl-cos" rows="12" style="font-family:monospace;font-size:.82rem"></textarea></div>
+    <div class="alert al-info" style="margin-bottom:14px;font-size:.82rem">Pots usar <strong>{{nombreAlumno}}</strong>, <strong>{{correoAlumno}}</strong>, <strong>{{nombreTutor}}</strong>, <strong>{{correoTutor}}</strong>, <strong>{{Dadesportatils}}</strong>.</div>
+    <div class="fg"><label>Cos de la plantilla</label><div class="ta" id="mtpl-cos" contenteditable="true" style="min-height:220px;max-height:380px;overflow-y:auto;line-height:1.75;font-size:.85rem"></div></div>
     <div class="mf">
       <button class="btn btn-out" onclick="cM('mo-tpl')">Cancel·lar</button>
       <button class="btn btn-pri" onclick="desarPlantilla()">💾 Desar plantilla</button>
@@ -885,9 +885,12 @@ function cancelEdicio() {
   document.getElementById('ep-action-bar').style.display = 'flex';
 }
 function usarNomesAra() {
-  customCorpus = document.getElementById('ep-view').innerHTML;
-  cancelEdicio();
-  document.getElementById('ep-view').innerHTML = customCorpus;
+  const view = document.getElementById('ep-view');
+  customCorpus = view.innerHTML;
+  view.contentEditable = 'false';
+  view.style.outline = '';
+  cosOriginal = '';
+  document.getElementById('ep-edit-bar').style.display = 'none';
   document.getElementById('ep-action-bar').style.display = 'flex';
 }
 function editarPlantilla() {
@@ -895,11 +898,11 @@ function editarPlantilla() {
   const tpl = tplsData.plantilles.find(t => t.id === selTplId);
   if (!tpl) return;
   document.getElementById('mtpl-ttl').textContent = 'Editar plantilla: ' + selTplId;
-  document.getElementById('mtpl-cos').value = tpl.cos || '';
+  document.getElementById('mtpl-cos').innerHTML = tpl.cos || '';
   document.getElementById('mo-tpl').classList.add('open');
 }
 function desarPlantilla() {
-  const cos = document.getElementById('mtpl-cos').value;
+  const cos = document.getElementById('mtpl-cos').innerHTML;
   const btn = document.querySelector('#mo-tpl .btn-pri');
   btn.disabled = true; btn.textContent = 'Desant...';
   gasCall({ action: 'guardarPlantilla', tplId: selTplId, cos: cos }, function(resp) {
