@@ -364,6 +364,31 @@ code{font-size:.78rem;background:var(--g100);padding:1px 5px;border-radius:4px}
   </div>
 </div>
 
+<!-- ═══ MODAL sanció ═══ -->
+<div class="mo" id="mo-sancio">
+  <div class="mb">
+    <div class="mh"><h3 id="san-ttl">Gestió de sanció</h3><button class="mc" onclick="cM('mo-sancio')">×</button></div>
+    <div style="padding:4px 0 12px">
+      <div class="fg">
+        <label>Estat de la sanció</label>
+        <select class="sel" id="san-tipus">
+          <option value="">Cap sanció</option>
+          <option value="groga">🟡 Targeta groga — avís</option>
+          <option value="vermella">🔴 Targeta vermella — sense accés</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Motiu <span style="font-weight:400;color:var(--g500)">(obligatori si hi ha sanció)</span></label>
+        <textarea class="ta" id="san-motiu" rows="3" placeholder="Descriu el motiu de la sanció..."></textarea>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-out" onclick="cM('mo-sancio')">Cancel·lar</button>
+      <button class="btn btn-pri" onclick="sSancio()">Desar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ MODAL veure alumne ═══ -->
 <div class="mo" id="mo-va">
   <div class="mb">
@@ -665,11 +690,16 @@ function rAlu() {
     const esNou = a.nou === 'NOU';
     const pr = db.prestecs.find(p => p.aId === a.id && p.estat === 'actiu');
     const pc = pr ? gP(pr.pId) : null;
-    const nomTxt = '<strong>' + escH(nC(a)) + '</strong>' + (esNou ? '<span class="badge-nou">NOU</span>' : '');
+    const sanBadge = a.sancio === 'vermella' ? ' 🔴' : a.sancio === 'groga' ? ' 🟡' : '';
+    const nomTxt = '<strong>' + escH(nC(a)) + '</strong>' + sanBadge + (esNou ? '<span class="badge-nou">NOU</span>' : '');
     const pcTxt = pc ? '<span class="badge b-pri">' + escH(pL(pc)) + '</span>' : '<span style="color:var(--g400);font-size:.8rem">Cap</span>';
-    const btnLoan = pc
-      ? '<button class="btn btn-ok btn-sm" title="Registrar devolució" onclick="oD(\'' + pr.id + '\')">↩</button>'
-      : '<button class="btn btn-pri btn-sm" title="Nou préstec" onclick="oPresA(\'' + escQ(a.id) + '\')">💻</button>';
+    const btnLoan = a.sancio === 'vermella'
+      ? '<button class="btn btn-sm" style="opacity:.35;cursor:not-allowed" title="Accés bloquejat per targeta vermella" disabled>🚫</button>'
+      : pc
+        ? '<button class="btn btn-ok btn-sm" title="Registrar devolució" onclick="oD(\'' + pr.id + '\')">↩</button>'
+        : '<button class="btn btn-pri btn-sm" title="Nou préstec" onclick="oPresA(\'' + escQ(a.id) + '\')">💻</button>';
+    const sanIcon = a.sancio === 'vermella' ? '🔴' : a.sancio === 'groga' ? '🟡' : '🟨';
+    const sanTip = a.sancio === 'vermella' ? 'Targeta vermella activa' : a.sancio === 'groga' ? 'Targeta groga activa' : 'Sense sanció · Gestionar';
     rows += '<tr class="' + (esNou ? 'fila-nova' : '') + '">' +
       '<td>' + nomTxt + '</td>' +
       '<td style="font-size:.82rem">' + escH(a.curs || '—') + (a.grup ? ' · ' + escH(a.grup) : '') + '</td>' +
@@ -678,6 +708,7 @@ function rAlu() {
         '<button class="btn btn-out btn-sm" title="Veure fitxa completa" onclick="oVA(\'' + escQ(a.id) + '\')">📑</button>' +
         '<button class="btn btn-out btn-sm" title="Editar" onclick="oMA(\'' + escQ(a.id) + '\')">✏️</button>' +
         btnLoan +
+        '<button class="btn btn-out btn-sm" title="' + sanTip + '" onclick="oSancio(\'' + escQ(a.id) + '\')">' + sanIcon + '</button>' +
       '</div></td></tr>';
   });
   document.getElementById('alu-t').innerHTML = '<table><thead><tr><th>Nom complet</th><th>Curs / Grup</th><th>Portàtil assignat</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>';
@@ -1082,15 +1113,41 @@ function oVA(id) {
     '<div style="margin:14px 0 8px;font-size:.82rem;font-weight:600;color:var(--g700);border-top:1px solid var(--g200);padding-top:14px">💻 Portàtil</div>' +
     (pc
       ? '<div class="alert al-info" style="margin:0"><strong>' + escH(pL(pc)) + '</strong><br><span style="font-size:.8rem">Entregat el ' + fD(pr.dataE) + ' · ' + dias(pr.dataE) + ' dies</span></div>'
-      : '<div style="color:var(--g400);font-style:italic;font-size:.88rem;padding:6px 0">Cap portàtil assignat.</div>');
+      : '<div style="color:var(--g400);font-style:italic;font-size:.88rem;padding:6px 0">Cap portàtil assignat.</div>') +
+    '<div style="margin:14px 0 8px;font-size:.82rem;font-weight:600;color:var(--g700);border-top:1px solid var(--g200);padding-top:14px">🃏 Sanció</div>' +
+    (a.sancio === 'vermella'
+      ? '<div class="alert" style="margin:0;background:#fff0f0;border-color:#fca5a5;color:#b91c1c"><strong>🔴 Targeta vermella</strong> — Accés al sistema bloquejat' + (a.motiu_sancio ? '<br><span style="font-size:.82rem">' + escH(a.motiu_sancio) + '</span>' : '') + '</div>'
+      : a.sancio === 'groga'
+        ? '<div class="alert" style="margin:0;background:#fffbeb;border-color:#fcd34d;color:#92400e"><strong>🟡 Targeta groga</strong> — Avís actiu' + (a.motiu_sancio ? '<br><span style="font-size:.82rem">' + escH(a.motiu_sancio) + '</span>' : '') + '</div>'
+        : '<div style="color:var(--g400);font-style:italic;font-size:.88rem;padding:6px 0">Sense sancions.</div>');
   document.getElementById('va-btn-edit')._aluId = id;
   document.getElementById('mo-va').classList.add('open');
 }
 function vaEdit() { const id = document.getElementById('va-btn-edit')._aluId; cM('mo-va'); oMA(id); }
 
+function oSancio(id) {
+  const a = gA(id); if (!a) return;
+  document.getElementById('san-ttl').textContent = 'Sanció · ' + nC(a);
+  document.getElementById('san-tipus').value = a.sancio || '';
+  document.getElementById('san-motiu').value = a.motiu_sancio || '';
+  document.getElementById('mo-sancio')._aluId = id;
+  document.getElementById('mo-sancio').classList.add('open');
+}
+function sSancio() {
+  const id = document.getElementById('mo-sancio')._aluId;
+  const a = gA(id); if (!a) return;
+  const tipus = document.getElementById('san-tipus').value;
+  const motiu = document.getElementById('san-motiu').value.trim();
+  if (tipus && !motiu) { alert('Cal indicar el motiu de la sanció.'); return; }
+  a.sancio = tipus;
+  a.motiu_sancio = motiu;
+  sDB({ portatils: [], alumnes: [a], prestecs: [] }, () => { cM('mo-sancio'); rAlu(); });
+}
+
 function sPr() {
   const aId = document.getElementById('pr-alu').value, pId = document.getElementById('pr-pc').value, dataE = document.getElementById('pr-data').value;
   if (!aId || !pId || !dataE) { alert('Alumne/a, portàtil i data són obligatoris.'); return; }
+  const aluPr = gA(aId); if (aluPr && aluPr.sancio === 'vermella') { alert('⛔ Aquest/a alumne/a té una targeta vermella i no pot rebre préstecs.' + (aluPr.motiu_sancio ? '\nMotiu: ' + aluPr.motiu_sancio : '')); return; }
   const nouPrestec = { id: uid(), aId, pId, dataE, dataD: '', curs: document.getElementById('pr-curs').value.trim(), obs: document.getElementById('pr-obs').value.trim(), obsD: '', estat: 'actiu' };
   db.prestecs.push(nouPrestec);
   const pcPr = gP(pId); if (pcPr) pcPr.estat = 'assignat';
