@@ -338,12 +338,20 @@ code{font-size:.78rem;background:var(--g100);padding:1px 5px;border-radius:4px}
               <button class="btn btn-teal btn-sm" onclick="usarNomesAra()">✅ Usar sols ara</button>
               <button class="btn btn-out btn-sm" onclick="cancelEdicio()">✕ Cancel·lar edició</button>
             </div>
-            <div id="ep-action-bar" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+            <div id="ep-action-bar" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px">
               <button class="btn btn-pri" id="btn-enviar" onclick="enviarCorreu()">📨 Enviar ara</button>
               <button class="btn btn-out btn-sm" onclick="copyEmail()">📋 Copiar text</button>
               <button class="btn btn-out btn-sm" id="btn-editar-cos" onclick="activarEdicioCos()" style="display:none">✏️ Editar per enviar</button>
+              <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
+                <input type="date" class="inp" id="cor-data-prog" style="width:150px;font-size:.85rem">
+                <button class="btn btn-out btn-sm" onclick="programarCorreu()">📅 Programar</button>
+              </div>
             </div>
           </div>
+        </div>
+        <div style="margin-top:28px;border-top:1px solid var(--g200);padding-top:20px">
+          <div class="sec-lbl" style="margin-bottom:10px">📬 Correus programats</div>
+          <div id="cor-programats"><div style="color:var(--g400);font-style:italic;font-size:.88rem">Cap correu programat.</div></div>
         </div>
       </div>
     </div>
@@ -553,7 +561,7 @@ code{font-size:.78rem;background:var(--g100);padding:1px 5px;border-radius:4px}
 
 <script>
 // ── DB ──────────────────────────────────────────
-let db = { portatils: [], alumnes: [], prestecs: [] };
+let db = { portatils: [], alumnes: [], prestecs: [], correus_programats: [] };
 
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzkIkpt9nVsla7qH-0t5me7ZkmGwWI2iNcH-GiOl0vSUkWIkjec0WkFdeXI3dDcztWInQ/exec';
 
@@ -569,7 +577,7 @@ function gasCall(params, callback) {
 
 function lDB(callback) {
   gasCall({ action: 'loadDB' }, function(resp) {
-    if (resp && resp.portatils) { resp.portatils.forEach(function(p) { if (!p.estat) p.estat = 'disponible'; }); db = resp; }
+    if (resp && resp.portatils) { resp.portatils.forEach(function(p) { if (!p.estat) p.estat = 'disponible'; }); db = resp; if (!db.correus_programats) db.correus_programats = []; }
     if (callback) callback();
   });
 }
@@ -860,6 +868,7 @@ function rCor() {
     }
     document.getElementById('cor-main').style.display = 'block';
     rEP();
+    rCorProgramats();
   });
 }
 
@@ -988,6 +997,56 @@ function rEP() {
   if (warnings.length) infoHtml += '<div class="alert al-warn" style="margin:' + (destLines.length ? '8px 0 0' : '0') + '">' + warnings.map(w => '<div>' + w + '</div>').join('') + '</div>';
   infoEl.innerHTML = infoHtml;
   infoEl.style.display = infoHtml ? 'block' : 'none';
+}
+
+function programarCorreu() {
+  const aluId = document.getElementById('cor-alu')?.value;
+  const dest  = document.getElementById('cor-dest')?.value;
+  const dataEnviar = document.getElementById('cor-data-prog').value;
+  if (!selTplId || !aluId) { alert('Selecciona una plantilla i un alumne/a primer.'); return; }
+  if (!dataEnviar) { alert('Selecciona una data d\'enviament.'); return; }
+  if (dataEnviar < today()) { alert('La data ha de ser avui o posterior.'); return; }
+  if (customCorpus) { if (!confirm('Has editat el cos del correu. El correu programat s\'enviarà amb la plantilla original (sense les teves edicions).\n\nContinuar?')) return; }
+  const rec = { id: uid(), tplId: selTplId, aluId, dest, dataEnviar, estat: 'pendent', dataEnviat: '', missError: '' };
+  db.correus_programats.push(rec);
+  sDB({ portatils: [], alumnes: [], prestecs: [], correus_programats: [rec] }, function() {
+    document.getElementById('cor-data-prog').value = '';
+    alert('✅ Correu programat per al ' + fD(dataEnviar) + '.');
+    rCorProgramats();
+  });
+}
+
+function rCorProgramats() {
+  const container = document.getElementById('cor-programats');
+  if (!container) return;
+  const llista = db.correus_programats.filter(c => c.estat !== 'cancel·lat').sort((a, b) => (a.dataEnviar || '').localeCompare(b.dataEnviar || ''));
+  if (!llista.length) { container.innerHTML = '<div style="color:var(--g400);font-style:italic;font-size:.88rem">Cap correu programat.</div>'; return; }
+  let rows = '';
+  llista.forEach(function(c) {
+    const a = gA(c.aluId);
+    const nomA = a ? nC(a) : '—';
+    const tpl = tplsData?.plantilles?.find(t => t.id === c.tplId);
+    const nomTpl = tpl ? tpl.nom : '—';
+    const destTxt = c.dest === 'coach' ? 'Tutor/a' : c.dest === 'ambdós' ? 'Ambdós' : 'Alumne/a';
+    const badgeCls = c.estat === 'enviat' ? 'b-ok' : c.estat === 'error' ? 'b-err' : 'b-warn';
+    const badgeTxt = c.estat === 'enviat' ? '✅ Enviat' : c.estat === 'error' ? '⚠️ Error' : '⏳ Pendent';
+    const dataFmt = c.estat === 'enviat' ? fD(c.dataEnviat) + ' (enviat)' : fD(c.dataEnviar);
+    rows += '<tr>' +
+      '<td style="font-size:.85rem"><strong>' + escH(nomA) + '</strong><br><span style="color:var(--g500);font-size:.78rem">' + destTxt + '</span></td>' +
+      '<td style="font-size:.85rem">' + escH(nomTpl) + '</td>' +
+      '<td style="font-size:.85rem">' + dataFmt + '</td>' +
+      '<td><span class="badge ' + badgeCls + '">' + badgeTxt + '</span>' + (c.missError ? '<br><span style="font-size:.75rem;color:var(--err)">' + escH(c.missError) + '</span>' : '') + '</td>' +
+      (c.estat === 'pendent' ? '<td><button class="btn btn-out btn-sm" title="Cancel·lar" onclick="cancelProgramat(\'' + escQ(c.id) + '\')">🗑️</button></td>' : '<td></td>') +
+      '</tr>';
+  });
+  container.innerHTML = '<table><thead><tr><th>Destinatari</th><th>Plantilla</th><th>Data enviament</th><th>Estat</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>';
+}
+
+function cancelProgramat(id) {
+  if (!confirm('Cancel·lar aquest correu programat?')) return;
+  const c = db.correus_programats.find(x => x.id === id); if (!c) return;
+  c.estat = 'cancel·lat';
+  sDB({ portatils: [], alumnes: [], prestecs: [], correus_programats: [c] }, function() { rCorProgramats(); });
 }
 
 function enviarCorreu() {

@@ -6,9 +6,10 @@
 // ══════════════════════════════════════════════════════════════
 
 var HEADERS = {
-  portatils: ['id','marca','model','sace','estat','usr','pwd','obs'],
-  alumnes:   ['id','nom','cog','curs','grup','email','tnom','temail','nou'],
-  prestecs:  ['id','aId','pId','dataE','dataD','curs','obs','obsD','estat']
+  portatils:          ['id','marca','model','sace','estat','usr','pwd','obs'],
+  alumnes:            ['id','nom','cog','curs','grup','email','tnom','temail','nou','sancio','motiu_sancio'],
+  prestecs:           ['id','aId','pId','dataE','dataD','curs','obs','obsD','estat'],
+  correus_programats: ['id','tplId','aluId','dest','dataEnviar','estat','dataEnviat','missError']
 };
 
 var ID_PETICIONS = "1Pm06Uu3Y350NTZqNuWs4g6e6r4Zqaq5zQAOyrbD8lzU";
@@ -112,9 +113,10 @@ function sheetToObjects(name) {
 
 function loadDB() {
   var db = {
-    portatils: sheetToObjects('portatils'),
-    alumnes:   sheetToObjects('alumnes'),
-    prestecs:  sheetToObjects('prestecs')
+    portatils:          sheetToObjects('portatils'),
+    alumnes:            sheetToObjects('alumnes'),
+    prestecs:           sheetToObjects('prestecs'),
+    correus_programats: sheetToObjects('correus_programats')
   };
   return JSON.stringify(db);
 }
@@ -134,7 +136,7 @@ function saveDB(dbStr) {
 
 function saveChanges(changesStr) {
   var changes = JSON.parse(changesStr);
-  ['portatils', 'alumnes', 'prestecs'].forEach(function(table) {
+  ['portatils', 'alumnes', 'prestecs', 'correus_programats'].forEach(function(table) {
     var recs = changes[table];
     if (!recs || !recs.length) return;
     recs.forEach(function(rec) {
@@ -649,5 +651,49 @@ function enviarAcceptarCondicionsLot(alumnesJson) {
     return JSON.stringify({ ok: true, msg: msg, enviats: enviats });
   } catch(e) {
     return JSON.stringify({ ok: false, msg: e.message });
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  CORREUS PROGRAMATS — execució automàtica via Time Trigger
+//  Configura un trigger: enviarCorreusPendents → Diari → 7-8h
+// ══════════════════════════════════════════════════════════════
+
+function enviarCorreusPendents() {
+  var sh      = getSheet('correus_programats');
+  var headers = HEADERS.correus_programats;
+  var data    = sh.getDataRange().getValues();
+  if (data.length <= 1) return;
+
+  var avui = Utilities.formatDate(new Date(), 'Europe/Madrid', 'yyyy-MM-dd');
+
+  for (var i = 1; i < data.length; i++) {
+    var rec = {};
+    headers.forEach(function(h, idx) { rec[h] = data[i][idx]; });
+
+    if (rec.estat !== 'pendent') continue;
+    if (String(rec.dataEnviar) > avui) continue;
+
+    try {
+      var resultat = JSON.parse(enviarCorreuDirecte(
+        String(rec.tplId),
+        String(rec.aluId),
+        String(rec.dest),
+        ''
+      ));
+      var iEstat     = headers.indexOf('estat')     + 1;
+      var iDataEnviat = headers.indexOf('dataEnviat') + 1;
+      var iMissError = headers.indexOf('missError') + 1;
+      if (resultat && resultat.ok !== false) {
+        sh.getRange(i + 1, iEstat).setValue('enviat');
+        sh.getRange(i + 1, iDataEnviat).setValue(avui);
+      } else {
+        sh.getRange(i + 1, iEstat).setValue('error');
+        sh.getRange(i + 1, iMissError).setValue(resultat ? resultat.msg : 'Error desconegut');
+      }
+    } catch(e) {
+      sh.getRange(i + 1, headers.indexOf('estat') + 1).setValue('error');
+      sh.getRange(i + 1, headers.indexOf('missError') + 1).setValue(e.message);
+    }
   }
 }
