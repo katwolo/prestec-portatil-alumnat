@@ -338,11 +338,13 @@ code{font-size:.78rem;background:var(--g100);padding:1px 5px;border-radius:4px}
               <button class="btn btn-teal btn-sm" onclick="usarNomesAra()">✅ Usar sols ara</button>
               <button class="btn btn-out btn-sm" onclick="cancelEdicio()">✕ Cancel·lar edició</button>
             </div>
-            <div id="ep-action-bar" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px">
-              <button class="btn btn-pri" id="btn-enviar" onclick="enviarCorreu()">📨 Enviar ara</button>
-              <button class="btn btn-out btn-sm" onclick="copyEmail()">📋 Copiar text</button>
-              <button class="btn btn-out btn-sm" id="btn-editar-cos" onclick="activarEdicioCos()" style="display:none">✏️ Editar per enviar</button>
-              <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
+            <div id="ep-action-bar" style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                <button class="btn btn-pri" id="btn-enviar" onclick="enviarCorreu()">📨 Enviar ara</button>
+                <button class="btn btn-out btn-sm" onclick="copyEmail()">📋 Copiar text</button>
+                <button class="btn btn-out btn-sm" id="btn-editar-cos" onclick="activarEdicioCos()" style="display:none">✏️ Editar per enviar</button>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px">
                 <input type="date" class="inp" id="cor-data-prog" style="width:150px;font-size:.85rem">
                 <button class="btn btn-out btn-sm" onclick="programarCorreu()">📅 Programar</button>
               </div>
