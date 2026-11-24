@@ -544,7 +544,7 @@ function gasCall(params, callback) {
 
 function lDB(callback) {
   gasCall({ action: 'loadDB' }, function(resp) {
-    if (resp && resp.portatils) db = resp;
+    if (resp && resp.portatils) { resp.portatils.forEach(function(p) { if (!p.estat) p.estat = 'disponible'; }); db = resp; }
     if (callback) callback();
   });
 }
